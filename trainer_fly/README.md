@@ -1487,3 +1487,23 @@ Expected inverted visual test: while sliding, corrupted Trainer body should face
 - **Public releases must remove/disable the external Drive mirror.** It is a
   development-only diagnostic feature and is not part of G1GPP's public
   runtime behavior or configuration contract.
+
+
+## 12.13.51 development loader fix
+
+- Fixes the Lua loader failure `function at line 644 has more than 200 local variables` introduced by the 12.13.50 dual-log instrumentation.
+- Logger constants are grouped into one `DEBUG` table, reducing the main mod function from 205 top-level locals to 199.
+- No intentional Trainer, MissingNo., battle, map, or gameplay behavior changes from 12.13.50.
+- Development-only Drive log mirroring remains enabled for testing and must still be removed before public release.
+
+
+## 12.13.52 modular debug logger
+
+- Replaces the temporary 12.13.51 near-limit workaround with the intended modular architecture.
+- Moves persistent diagnostic logging, session identity/version detection, log rotation, and the development-only Google Drive mirror into `modules/debug_logger.lua`.
+- `main.lua` now loads the module through `love.filesystem.load(mod.path .. "/modules/debug_logger.lua")`, the same LÖVE filesystem used by Gen1Recomp's mod loader, so the module works from installed mod folders/ZIP mounts without depending on Lua `package.path`.
+- The main initializer drops from roughly 198 top-level local declarations in 12.13.51 to roughly 178, restoring meaningful headroom below Lua's 200-local limit.
+- `CLEAR DEBUG LOG`, session start/end markers, rotation, game-version logging, and the development Drive mirror keep the same behavior.
+- Adds a repository preflight guard under `tools/check_lua_structure.py`; it fails when `main.lua` exceeds the project's local-declaration budget and invokes `luac -p` automatically when a Lua compiler is available.
+- Future substantial systems must be added as modules instead of consuming `main.lua` local slots.
+- No intentional Trainer, MissingNo., battle, map, or gameplay behavior change from 12.13.50/12.13.51.

@@ -847,116 +847,20 @@ return function(mod)
   local forcedMenu = nil
   local startPressAge = 9999
 
-  -- Persistent diagnostics independent of the recomp's console logger.
-  local DEBUG_LOG_DIR = "trainer_fly"
-  local DEBUG_LOG_FILE = DEBUG_LOG_DIR .. "/g1gpp_debug.log"
-  -- Persistent diagnostic contract:
-  -- Every new feature should log request/preconditions, captured inputs, state
-  -- before mutation, attempted action/arguments, success or failure, resulting
-  -- state, and cleanup/recovery where practical. Never rely on silent pcall
-  -- behavior for user-tested features; record caught errors in this file.
-  local DEBUG_LOG_MAX_BYTES = 1024 * 1024
-  local DEBUG_SESSION_MARKER = DEBUG_LOG_DIR .. "/g1gpp_session_open.txt"
-  -- DEVELOPMENT-ONLY instrumentation. Public/release builds must disable or
-  -- remove this external mirror and keep only the normal mod-local AppData
-  -- log. This absolute path is intentionally specific to the development
-  -- workstation's Google Drive for Desktop mount.
-  local DEBUG_DRIVE_MIRROR_ENABLED = true
-  local DEBUG_DRIVE_MIRROR_FILE = [[G:\My Drive\Glitch Project\Project Documentation\g1gpp_debug.log]]
-  local debugDriveMirrorAvailable = false
-  local debugDriveMirrorError = nil
-  local BUILD_VERSION = "1.1.0-beta1-missingno12.13.50-dev-dual-log-mirror"
-  local debugLogSequence = 0
-  local debugSessionId = nil
-  local debugGameVersionId = "unknown"
-  local debugGameVersionLabel = "Unknown"
-  local debugGameVersionError = nil
+  -- Persistent diagnostics live in a separate module so main.lua remains
+  -- an entry/wiring surface instead of accumulating locals indefinitely.
+  -- Load through love.filesystem using the mod root exposed by Gen1Recomp;
+  -- this works for both unpacked development mods and ZIP-mounted mods.
+  local debugLogger = assert(love.filesystem.load(
+    mod.path .. "/modules/debug_logger.lua"))({
+      buildVersion = "1.1.0-beta1-missingno12.13.52-modular-debug-logger",
+      logDir = "trainer_fly",
+      maxBytes = 1024 * 1024,
+      driveMirrorEnabled = true,
+      driveMirrorFile = [[G:\My Drive\Glitch Project\Project Documentation\g1gpp_debug.log]],
+    })
   local debugGameLoadedMarked = false
-  local debugSessionEnded = false
   local playerStateSummary
-
-  local function safeField(value)
-    if value == nil then return "nil" end
-    local ok, result = pcall(tostring, value)
-    return ok and result or "<tostring failed>"
-  end
-
-  local function debugTimestamp()
-    local ok, stamp = pcall(os.date, "%Y-%m-%d %H:%M:%S")
-    if ok and stamp then return stamp end
-    local t = love and love.timer and love.timer.getTime and love.timer.getTime() or 0
-    return ("runtime+%.3f"):format(tonumber(t) or 0)
-  end
-
-  local function writeDriveMirror(data, mode)
-    if not DEBUG_DRIVE_MIRROR_ENABLED then return false, "disabled" end
-    local ok, err = pcall(function()
-      local f, openErr = io.open(DEBUG_DRIVE_MIRROR_FILE, mode or "ab")
-      if not f then error(openErr or "io.open failed") end
-      local writeOk, writeErr = f:write(data or "")
-      if not writeOk then
-        pcall(f.close, f)
-        error(writeErr or "write failed")
-      end
-      f:flush()
-      f:close()
-    end)
-    if ok then
-      debugDriveMirrorAvailable = true
-      debugDriveMirrorError = nil
-      return true, nil
-    end
-    debugDriveMirrorAvailable = false
-    debugDriveMirrorError = err
-    return false, err
-  end
-
-  local function syncDriveMirrorFromPrimary()
-    if not DEBUG_DRIVE_MIRROR_ENABLED then return false, "disabled" end
-    if not love.filesystem.getInfo(DEBUG_LOG_FILE) then
-      return writeDriveMirror("", "wb")
-    end
-    local okRead, data = pcall(love.filesystem.read, DEBUG_LOG_FILE)
-    if not okRead then
-      debugDriveMirrorAvailable = false
-      debugDriveMirrorError = data
-      return false, data
-    end
-    return writeDriveMirror(data or "", "wb")
-  end
-
-  local function clearDriveMirror()
-    if not DEBUG_DRIVE_MIRROR_ENABLED then return false, "disabled" end
-    return writeDriveMirror("", "wb")
-  end
-
-  local function rotateDebugLogIfNeeded()
-    local info = love.filesystem.getInfo(DEBUG_LOG_FILE)
-    if info and tonumber(info.size) and info.size >= DEBUG_LOG_MAX_BYTES then
-      local old = DEBUG_LOG_DIR .. "/g1gpp_debug_previous.log"
-      pcall(love.filesystem.remove, old)
-      local ok, data = pcall(love.filesystem.read, DEBUG_LOG_FILE)
-      if ok and data then pcall(love.filesystem.write, old, data) end
-      pcall(love.filesystem.write, DEBUG_LOG_FILE,
-        "=== G1GPP DEBUG LOG ROTATED ===\n")
-      syncDriveMirrorFromPrimary()
-    end
-  end
-
-  local function debugLog(event, details)
-    pcall(function()
-      love.filesystem.createDirectory(DEBUG_LOG_DIR)
-      rotateDebugLogIfNeeded()
-      debugLogSequence = debugLogSequence + 1
-      local line = ("[%s] #%06d %-30s %s\n"):format(
-        debugTimestamp(), debugLogSequence,
-        safeField(event), safeField(details or ""))
-      love.filesystem.append(DEBUG_LOG_FILE, line)
-      -- Best-effort development mirror. External-drive failure must never
-      -- affect gameplay or the authoritative AppData log.
-      writeDriveMirror(line, "ab")
-    end)
-  end
 
   -- Gen1Recomp correctly deduplicates ordinary starting moves. Red/Blue's
   -- normal MissingNo. records are a narrow ROM-data exception: their first
@@ -980,89 +884,16 @@ return function(mod)
     if gotVersion and (version == "red" or version == "blue")
         and index and index <= 181
         and speciesDef.name == "MISSINGNO." then
-      debugLog("MISSINGNO MOVESET PRESERVED",
-        "species=" .. safeField(speciesId)
-          .. " level=" .. safeField(level)
-          .. " gameVersion=" .. safeField(version)
+      debugLogger:log("MISSINGNO MOVESET PRESERVED",
+        "species=" .. debugLogger:safeField(speciesId)
+          .. " level=" .. debugLogger:safeField(level)
+          .. " gameVersion=" .. debugLogger:safeField(version)
           .. " moves=WATER_GUN,WATER_GUN,SKY_ATTACK"
           .. " globalDeduplicationChanged=false")
       return { "WATER_GUN", "WATER_GUN", "SKY_ATTACK" }
     end
     return ManagerState.G1.Pokemon._g1gppOriginalMovesAtLevel(
       speciesDef, level)
-  end
-
-  local function makeDebugSessionId()
-    local epoch = os and os.time and os.time() or 0
-    local runtime = love and love.timer and love.timer.getTime and love.timer.getTime() or 0
-    return ("%s-%s-%06d"):format(debugTimestamp():gsub("[^%d]", ""),
-      safeField(epoch), math.floor((tonumber(runtime) or 0) * 1000) % 1000000)
-  end
-
-  local function detectGameVersion()
-    local loaded, GameVersion = pcall(require, "src.core.GameVersion")
-    if not loaded or type(GameVersion) ~= "table" then
-      return "unknown", "Unknown", loaded and "invalid_module" or GameVersion
-    end
-
-    local gotId, id = pcall(GameVersion.get)
-    local gotInfo, info = pcall(GameVersion.info)
-    if not gotId or type(id) ~= "string" then
-      return "unknown", "Unknown", gotId and "invalid_id" or id
-    end
-
-    local label = gotInfo and type(info) == "table"
-      and (info.label or info.displayName) or nil
-    if not gotInfo then return id, label or id, info end
-    return id, label or id, nil
-  end
-
-  local function gameVersionSummary()
-    return "gameVersion=" .. safeField(debugGameVersionId)
-      .. " gameLabel=" .. safeField(debugGameVersionLabel)
-      .. " gameVersionError=" .. safeField(debugGameVersionError)
-  end
-
-  local function beginDebugSession()
-    love.filesystem.createDirectory(DEBUG_LOG_DIR)
-    -- Rebuild the Drive mirror from the authoritative AppData log on every
-    -- startup before appending this session, so an offline/stale mirror
-    -- self-heals without symlinks.
-    local mirrorSyncOk, mirrorSyncErr = syncDriveMirrorFromPrimary()
-    local previous = love.filesystem.getInfo(DEBUG_SESSION_MARKER)
-    if previous then
-      local ok, prior = pcall(love.filesystem.read, DEBUG_SESSION_MARKER)
-      debugLog("PREVIOUS SESSION UNCLEAN END",
-        "previousSession=" .. safeField(ok and prior or "unknown"))
-    end
-    debugSessionId = makeDebugSessionId()
-    debugGameVersionId, debugGameVersionLabel, debugGameVersionError = detectGameVersion()
-    pcall(love.filesystem.write, DEBUG_SESSION_MARKER, debugSessionId)
-    debugLog("SESSION START", "session=" .. safeField(debugSessionId)
-      .. " version=" .. BUILD_VERSION .. " " .. gameVersionSummary())
-    debugLog(mirrorSyncOk and "DEBUG DRIVE MIRROR ACTIVE"
-        or "DEBUG DRIVE MIRROR UNAVAILABLE",
-      "devOnly=true path=" .. safeField(DEBUG_DRIVE_MIRROR_FILE)
-        .. " startupSync=" .. safeField(mirrorSyncOk)
-        .. " error=" .. safeField(mirrorSyncErr))
-    local rbTmhmActive = debugGameVersionId == "red"
-      or debugGameVersionId == "blue"
-    debugLog("MISSINGNO TMHM COMPATIBILITY",
-      "installed=" .. safeField(rbTmhmActive)
-        .. " gameVersion=" .. safeField(debugGameVersionId)
-        .. " normalForms=" .. safeField(rbTmhmActive and 36 or 0)
-        .. " moveCount=" .. safeField(rbTmhmActive and 24 or 0)
-        .. " tm12WaterGun=false tm43SkyAttack="
-        .. safeField(rbTmhmActive)
-        .. " specialFormsExcluded=true yellowExcluded=true")
-  end
-
-  local function endDebugSession(reason)
-    if debugSessionEnded then return end
-    debugSessionEnded = true
-    debugLog("SESSION END", "session=" .. safeField(debugSessionId)
-      .. " reason=" .. safeField(reason) .. " " .. playerStateSummary(activeWorld))
-    pcall(love.filesystem.remove, DEBUG_SESSION_MARKER)
   end
 
   -- MissingNo.'s inverted-sprite side effect is a volatile RAM condition on
@@ -1207,9 +1038,9 @@ return function(mod)
     local save = captureGame and captureGame.save
     local rhydon = data and data.pokemon and data.pokemon.RHYDON
     if not (mon and rhydon) then
-      debugLog("RHYDON GLITCH CONVERSION FAILED",
+      debugLogger:log("RHYDON GLITCH CONVERSION FAILED",
         "reason=record_or_rhydon_unavailable originalSpecies="
-          .. safeField(pending and pending.originalSpecies))
+          .. debugLogger:safeField(pending and pending.originalSpecies))
       return false
     end
 
@@ -1254,14 +1085,14 @@ return function(mod)
       end
     end
 
-    debugLog("RHYDON GLITCH CONVERSION COMPLETE",
-      "originalSpecies=" .. safeField(originalSpecies)
-        .. " resultSpecies=RHYDON level=" .. safeField(level)
-        .. " moves=" .. safeField(#newMoves)
-        .. " cuboneSeen=true hp=" .. safeField(mon.hp)
-        .. "/" .. safeField(mon.stats and mon.stats.hp)
-        .. " remainingOriginal=" .. safeField(remainingOriginal)
-        .. " ownershipRetained=" .. safeField(remainingOriginal > 0)
+    debugLogger:log("RHYDON GLITCH CONVERSION COMPLETE",
+      "originalSpecies=" .. debugLogger:safeField(originalSpecies)
+        .. " resultSpecies=RHYDON level=" .. debugLogger:safeField(level)
+        .. " moves=" .. debugLogger:safeField(#newMoves)
+        .. " cuboneSeen=true hp=" .. debugLogger:safeField(mon.hp)
+        .. "/" .. debugLogger:safeField(mon.stats and mon.stats.hp)
+        .. " remainingOriginal=" .. debugLogger:safeField(remainingOriginal)
+        .. " ownershipRetained=" .. debugLogger:safeField(remainingOriginal > 0)
         .. " saveSchemaMutation=false")
     mod.log:info(
       "G1GPP safely converted caught %s to Rhydon after No.000 page",
@@ -1289,17 +1120,17 @@ return function(mod)
     local save = captureGame and captureGame.save
     local dex = save and save.pokedex
     local wasSeen = cuboneSeen(save)
-    debugLog("MISSINGNO CAPTURE FLAG CHECK",
-      "species=" .. safeField(species)
-        .. " cuboneSeen=" .. safeField(wasSeen)
+    debugLogger:log("MISSINGNO CAPTURE FLAG CHECK",
+      "species=" .. debugLogger:safeField(species)
+        .. " cuboneSeen=" .. debugLogger:safeField(wasSeen)
         .. " outcome=" .. (wasSeen and "skip_page_retain_missingno"
           or "show_page_convert_rhydon"))
 
     if wasSeen then
       dex.owned = dex.owned or {}
       dex.owned[species] = true
-      debugLog("MISSINGNO CAPTURE PAGE SKIPPED",
-        "species=" .. safeField(species)
+      debugLogger:log("MISSINGNO CAPTURE PAGE SKIPPED",
+        "species=" .. debugLogger:safeField(species)
           .. " reason=cubone_seen conversion=false")
       return originalStoreCaughtMon(self)
     end
@@ -1317,8 +1148,8 @@ return function(mod)
       game = captureGame,
       originalSpecies = species,
     }
-    debugLog("MISSINGNO CAPTURE PAGE ARMED",
-      "species=" .. safeField(species)
+    debugLogger:log("MISSINGNO CAPTURE PAGE ARMED",
+      "species=" .. debugLogger:safeField(species)
         .. " cuboneSeenBefore=false cuboneSeenAfter=true conversion=pending")
     return originalStoreCaughtMon(self)
   end
@@ -1338,19 +1169,19 @@ return function(mod)
       convertCapturedMissingNoToRhydon(pending)
       if type(priorDone) == "function" then priorDone() end
     end
-    debugLog("RHYDON GLITCH PAGE CONSTRUCTED",
-      "species=" .. safeField(pending.originalSpecies)
+    debugLogger:log("RHYDON GLITCH PAGE CONSTRUCTED",
+      "species=" .. debugLogger:safeField(pending.originalSpecies)
         .. " conversionTiming=after_page_close")
     return originalBattleBuildScreen(self, id, unpack(args))
   end
 
   local function invertedSpriteSummary()
-    return "active=" .. safeField(invertedSpriteState.active)
-      .. " sourceSpecies=" .. safeField(invertedSpriteState.sourceSpecies)
-      .. " sourceScreen=" .. safeField(invertedSpriteState.sourceScreen)
-      .. " activations=" .. safeField(invertedSpriteState.activationCount)
-      .. " recoveries=" .. safeField(invertedSpriteState.recoveryCount)
-      .. " affectedBattles=" .. safeField(invertedSpriteState.affectedBattles)
+    return "active=" .. debugLogger:safeField(invertedSpriteState.active)
+      .. " sourceSpecies=" .. debugLogger:safeField(invertedSpriteState.sourceSpecies)
+      .. " sourceScreen=" .. debugLogger:safeField(invertedSpriteState.sourceScreen)
+      .. " activations=" .. debugLogger:safeField(invertedSpriteState.activationCount)
+      .. " recoveries=" .. debugLogger:safeField(invertedSpriteState.recoveryCount)
+      .. " affectedBattles=" .. debugLogger:safeField(invertedSpriteState.affectedBattles)
   end
 
   local function activateInvertedSprites(species, source)
@@ -1359,7 +1190,7 @@ return function(mod)
     invertedSpriteState.activationCount = invertedSpriteState.activationCount + 1
     invertedSpriteState.sourceSpecies = species or "debug"
     invertedSpriteState.sourceScreen = source or "unknown"
-    debugLog(alreadyActive and "INVERTED SPRITES REARMED"
+    debugLogger:log(alreadyActive and "INVERTED SPRITES REARMED"
       or "INVERTED SPRITES ACTIVATED",
       invertedSpriteSummary())
   end
@@ -1368,9 +1199,9 @@ return function(mod)
     if not invertedSpriteState.active then return end
     invertedSpriteState.active = false
     invertedSpriteState.recoveryCount = invertedSpriteState.recoveryCount + 1
-    debugLog("INVERTED SPRITES RECOVERED",
-      "normalSpecies=" .. safeField(species)
-        .. " recoveryScreen=" .. safeField(source)
+    debugLogger:log("INVERTED SPRITES RECOVERED",
+      "normalSpecies=" .. debugLogger:safeField(species)
+        .. " recoveryScreen=" .. debugLogger:safeField(source)
         .. " " .. invertedSpriteSummary())
     invertedSpriteState.sourceSpecies = nil
     invertedSpriteState.sourceScreen = nil
@@ -1461,13 +1292,13 @@ return function(mod)
       displayDef.dexEntry = canonicalEntry
       screen.forceOwned = true
       screen.def = displayDef
-      debugLog("MISSINGNO DEX PAGE PREPARED",
-        "species=" .. safeField(species)
-          .. " mode=" .. safeField(mode)
-          .. " displayDex=000 forceOwned=" .. safeField(screen.forceOwned)
-          .. " kind=" .. safeField(displayDef.dexEntry
+      debugLogger:log("MISSINGNO DEX PAGE PREPARED",
+        "species=" .. debugLogger:safeField(species)
+          .. " mode=" .. debugLogger:safeField(mode)
+          .. " displayDex=000 forceOwned=" .. debugLogger:safeField(screen.forceOwned)
+          .. " kind=" .. debugLogger:safeField(displayDef.dexEntry
             and displayDef.dexEntry.kind)
-          .. " onDone=" .. safeField(type(onDone) == "function"))
+          .. " onDone=" .. debugLogger:safeField(type(onDone) == "function"))
     end
     return screen
   end
@@ -1513,14 +1344,14 @@ return function(mod)
         value = ownedMissingNo,
       })
       exposed = true
-      debugLog("MISSINGNO DEX INDEX EXPOSED",
-        "mode=ENHANCED species=" .. safeField(ownedMissingNo)
+      debugLogger:log("MISSINGNO DEX INDEX EXPOSED",
+        "mode=ENHANCED species=" .. debugLogger:safeField(ownedMissingNo)
           .. " displayDex=000 listPosition=1 internalDexHidden=true")
     end
-    debugLog("MISSINGNO DEX LIST MASKED",
-      "speciesCount=" .. safeField(#masked)
-        .. " visibleRange=001-151 mode=" .. safeField(mode)
-        .. " enhanced000Exposed=" .. safeField(exposed))
+    debugLogger:log("MISSINGNO DEX LIST MASKED",
+      "speciesCount=" .. debugLogger:safeField(#masked)
+        .. " visibleRange=001-151 mode=" .. debugLogger:safeField(mode)
+        .. " enhanced000Exposed=" .. debugLogger:safeField(exposed))
     return menuOrError
   end
 
@@ -1756,18 +1587,18 @@ return function(mod)
       bySource[kind] = transformed
       self._g1gppInvertedCanvases = self._g1gppInvertedCanvases or {}
       self._g1gppInvertedCanvases[#self._g1gppInvertedCanvases + 1] = transformed
-      debugLog("INVERTED SPRITE RENDERED",
-        "battle=" .. safeField(self)
-          .. " role=" .. safeField(kind)
-          .. " width=" .. safeField(resolved:getWidth())
-          .. " height=" .. safeField(resolved:getHeight()))
+      debugLogger:log("INVERTED SPRITE RENDERED",
+        "battle=" .. debugLogger:safeField(self)
+          .. " role=" .. debugLogger:safeField(kind)
+          .. " width=" .. debugLogger:safeField(resolved:getWidth())
+          .. " height=" .. debugLogger:safeField(resolved:getHeight()))
       return transformed
     end
 
-    debugLog("INVERTED SPRITE RENDER FAILED",
-      "battle=" .. safeField(self)
-        .. " role=" .. safeField(kind)
-        .. " error=" .. safeField(transformError))
+    debugLogger:log("INVERTED SPRITE RENDER FAILED",
+      "battle=" .. debugLogger:safeField(self)
+        .. " role=" .. debugLogger:safeField(kind)
+        .. " error=" .. debugLogger:safeField(transformError))
     return resolved
   end
 
@@ -1843,7 +1674,7 @@ return function(mod)
     if not bySource.trainer_postscale_nibble_swap then
       local transformed, err = transformedBattlePic(source, "trainer_postscale_nibble_swap")
       if not transformed then
-        debugLog("INVERTED TRAINER OAM BUILD FAILED", "error=" .. safeField(err))
+        debugLogger:log("INVERTED TRAINER OAM BUILD FAILED", "error=" .. debugLogger:safeField(err))
         return nil
       end
       bySource.trainer_postscale_nibble_swap = transformed
@@ -1852,13 +1683,13 @@ return function(mod)
       local padL, padBottom = measureTrainerSourcePadding(source)
       battle._g1gppTrainerSourcePadL = padL
       battle._g1gppTrainerSourcePadBottom = padBottom
-      debugLog("INVERTED TRAINER POST-SCALE BUFFER READY",
-        "sourceW=" .. safeField(source:getWidth())
-          .. " sourceH=" .. safeField(source:getHeight())
+      debugLogger:log("INVERTED TRAINER POST-SCALE BUFFER READY",
+        "sourceW=" .. debugLogger:safeField(source:getWidth())
+          .. " sourceH=" .. debugLogger:safeField(source:getHeight())
           .. " effectiveW=28 effectiveH=28"
           .. " finalActiveW=56 finalActiveH=56"
-          .. " padL=" .. safeField(padL)
-          .. " padBottom=" .. safeField(padBottom))
+          .. " padL=" .. debugLogger:safeField(padL)
+          .. " padBottom=" .. debugLogger:safeField(padBottom))
     end
     if not bySource.trainer_oam_21tile then
       local buffer = bySource.trainer_postscale_nibble_swap
@@ -1889,12 +1720,12 @@ return function(mod)
         pcall(g.setCanvas, previousCanvas)
         pcall(g.pop)
         pcall(canvas.release, canvas)
-        debugLog("INVERTED TRAINER OAM BUILD FAILED", "error=" .. safeField(drawError))
+        debugLogger:log("INVERTED TRAINER OAM BUILD FAILED", "error=" .. debugLogger:safeField(drawError))
         return nil
       end
       bySource.trainer_oam_21tile = canvas
       battle._g1gppInvertedCanvases[#battle._g1gppInvertedCanvases + 1] = canvas
-      debugLog("INVERTED TRAINER OAM TILE MAP",
+      debugLogger:log("INVERTED TRAINER OAM TILE MAP",
         "cols=7 rows=3 sourceTile=4 order=normal topRows=0..2")
     end
     return bySource.trainer_oam_21tile
@@ -1921,13 +1752,13 @@ return function(mod)
     local dx, dy = BattleState.backPlacement(w, h, padBottom, padL, scale)
     if not self._g1gppTrainerHeadGeometryLogged then
       self._g1gppTrainerHeadGeometryLogged = true
-      debugLog("INVERTED TRAINER OAM GEOMETRY",
+      debugLogger:log("INVERTED TRAINER OAM GEOMETRY",
         "pipeline=post_scale_equivalent"
-          .. " sourceW=" .. safeField(w)
-          .. " sourceH=" .. safeField(h)
-          .. " scale=" .. safeField(scale)
-          .. " finalW=" .. safeField(w * scale)
-          .. " finalH=" .. safeField(h * scale))
+          .. " sourceW=" .. debugLogger:safeField(w)
+          .. " sourceH=" .. debugLogger:safeField(h)
+          .. " scale=" .. debugLogger:safeField(scale)
+          .. " finalW=" .. debugLogger:safeField(w * scale)
+          .. " finalH=" .. debugLogger:safeField(h * scale))
     end
     love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(head,
@@ -1941,10 +1772,10 @@ return function(mod)
     affected._g1gppInvertedSprites = true
     affected._g1gppEnemySpriteBroken = false
     invertedSpriteState.affectedBattles = invertedSpriteState.affectedBattles + 1
-    debugLog("INVERTED BATTLE STARTED",
-      "kind=" .. safeField(ev.kind)
-        .. " trainerId=" .. safeField(ev.trainerId)
-        .. " enemySpecies=" .. safeField(ev.species)
+    debugLogger:log("INVERTED BATTLE STARTED",
+      "kind=" .. debugLogger:safeField(ev.kind)
+        .. " trainerId=" .. debugLogger:safeField(ev.trainerId)
+        .. " enemySpecies=" .. debugLogger:safeField(ev.species)
         .. " " .. invertedSpriteSummary())
   end)
 
@@ -1959,9 +1790,9 @@ return function(mod)
     -- redrawn during the first player attack.
     affected:actNext(function()
       affected._g1gppEnemySpriteBroken = true
-      debugLog("INVERTED ENEMY SPRITE BROKEN",
-        "move=" .. safeField(ev.move and ev.move.id)
-          .. " enemySpecies=" .. safeField(
+      debugLogger:log("INVERTED ENEMY SPRITE BROKEN",
+        "move=" .. debugLogger:safeField(ev.move and ev.move.id)
+          .. " enemySpecies=" .. debugLogger:safeField(
             affected.enemy and affected.enemy.mon and affected.enemy.mon.species))
     end)
   end)
@@ -1974,10 +1805,10 @@ return function(mod)
       local ok = pcall(canvas.release, canvas)
       if ok then released = released + 1 end
     end
-    debugLog("INVERTED BATTLE ENDED",
-      "result=" .. safeField(ev.result)
-        .. " canvasesReleased=" .. safeField(released)
-        .. " effectRemainsActive=" .. safeField(invertedSpriteState.active))
+    debugLogger:log("INVERTED BATTLE ENDED",
+      "result=" .. debugLogger:safeField(ev.result)
+        .. " canvasesReleased=" .. debugLogger:safeField(released)
+        .. " effectRemainsActive=" .. debugLogger:safeField(invertedSpriteState.active))
     affected._g1gppInvertedCanvases = nil
     affected._g1gppInvertedCache = nil
   end)
@@ -1990,21 +1821,21 @@ return function(mod)
     local runnerRunning = world.runner and world.runner.isRunning and world.runner:isRunning() or nil
     if not player then
       return ("map=%s player=nil transitioning=%s runner=%s stackTop=%s"):format(
-        safeField(map and map.id), safeField(world.transitioning),
-        safeField(runnerRunning), safeField(stackTop))
+        debugLogger:safeField(map and map.id), debugLogger:safeField(world.transitioning),
+        debugLogger:safeField(runnerRunning), debugLogger:safeField(stackTop))
     end
     return table.concat({
-      "map=" .. safeField(map and map.id),
-      "cell=" .. safeField(player.cellX) .. "," .. safeField(player.cellY),
-      "pixel=" .. safeField(player.px) .. "," .. safeField(player.py),
-      "target=" .. safeField(player.targetX) .. "," .. safeField(player.targetY),
-      "moving=" .. safeField(player.moving),
-      "progress=" .. safeField(player.progress),
-      "facing=" .. safeField(player.facing),
-      "inputLocked=" .. safeField(player.inputLocked),
-      "transitioning=" .. safeField(world.transitioning),
-      "runner=" .. safeField(runnerRunning),
-      "stackTop=" .. safeField(stackTop),
+      "map=" .. debugLogger:safeField(map and map.id),
+      "cell=" .. debugLogger:safeField(player.cellX) .. "," .. debugLogger:safeField(player.cellY),
+      "pixel=" .. debugLogger:safeField(player.px) .. "," .. debugLogger:safeField(player.py),
+      "target=" .. debugLogger:safeField(player.targetX) .. "," .. debugLogger:safeField(player.targetY),
+      "moving=" .. debugLogger:safeField(player.moving),
+      "progress=" .. debugLogger:safeField(player.progress),
+      "facing=" .. debugLogger:safeField(player.facing),
+      "inputLocked=" .. debugLogger:safeField(player.inputLocked),
+      "transitioning=" .. debugLogger:safeField(world.transitioning),
+      "runner=" .. debugLogger:safeField(runnerRunning),
+      "stackTop=" .. debugLogger:safeField(stackTop),
     }, " ")
   end
 
@@ -2107,7 +1938,7 @@ return function(mod)
 
   local function musicStateSummary()
     local state, err = musicRuntimeState()
-    if not state then return "musicState=nil error=" .. safeField(err) end
+    if not state then return "musicState=nil error=" .. debugLogger:safeField(err) end
     local source = state.source
     local playing, sourceType, pitch
     if source then
@@ -2119,25 +1950,25 @@ return function(mod)
       pitch = okPitch and valuePitch or "unavailable"
     end
     return table.concat({
-      "current=" .. safeField(state.current),
-      "mapSong=" .. safeField(state.mapSong),
-      "chip=" .. safeField(state.chip),
-      "playing=" .. safeField(playing),
-      "sourceType=" .. safeField(sourceType),
-      "pitch=" .. safeField(pitch),
+      "current=" .. debugLogger:safeField(state.current),
+      "mapSong=" .. debugLogger:safeField(state.mapSong),
+      "chip=" .. debugLogger:safeField(state.chip),
+      "playing=" .. debugLogger:safeField(playing),
+      "sourceType=" .. debugLogger:safeField(sourceType),
+      "pitch=" .. debugLogger:safeField(pitch),
     }, " ")
   end
 
   local function captureGlitchCityAudio(reason)
     local state, err = musicRuntimeState()
     if not state then
-      debugLog("AUDIO CAPTURE FAILED", safeField(reason) .. " error=" .. safeField(err))
+      debugLogger:log("AUDIO CAPTURE FAILED", debugLogger:safeField(reason) .. " error=" .. debugLogger:safeField(err))
       return
     end
     glitchCityHandoff.audioCapturedSong = state.current
     glitchCityHandoff.audioCapturedMapSong = state.mapSong
     glitchCityHandoff.audioCapturedChip = state.chip
-    debugLog("AUDIO CAPTURED", safeField(reason) .. " " .. musicStateSummary())
+    debugLogger:log("AUDIO CAPTURED", debugLogger:safeField(reason) .. " " .. musicStateSummary())
   end
 
   local function prepareReverseSource(src, volume)
@@ -2155,20 +1986,20 @@ return function(mod)
     prepareReverseSource(src, volume or 0)
     local okSeek, seekErr = pcall(src.seek, src, position, "seconds")
     local okPlay, playErr = pcall(src.play, src)
-    if not okSeek then return false, "seek=" .. safeField(seekErr) end
-    if not okPlay then return false, "play=" .. safeField(playErr) end
+    if not okSeek then return false, "seek=" .. debugLogger:safeField(seekErr) end
+    if not okPlay then return false, "play=" .. debugLogger:safeField(playErr) end
     return true, nil
   end
 
   local function startGlitchCityAudio()
-    debugLog("AUDIO REVERSE START REQUEST", "capturedSong="
-      .. safeField(glitchCityHandoff.audioCapturedSong)
-      .. " capturedMapSong=" .. safeField(glitchCityHandoff.audioCapturedMapSong)
+    debugLogger:log("AUDIO REVERSE START REQUEST", "capturedSong="
+      .. debugLogger:safeField(glitchCityHandoff.audioCapturedSong)
+      .. " capturedMapSong=" .. debugLogger:safeField(glitchCityHandoff.audioCapturedMapSong)
       .. " before=" .. musicStateSummary())
     local state, err = musicRuntimeState()
     if not state or not state.source then
       glitchCityHandoff.audioActive = false
-      debugLog("AUDIO REVERSE START FAILED", "error=" .. safeField(err)
+      debugLogger:log("AUDIO REVERSE START FAILED", "error=" .. debugLogger:safeField(err)
         .. " state=" .. musicStateSummary())
       return false
     end
@@ -2182,12 +2013,12 @@ return function(mod)
        and okDuration and type(duration) == "number" and duration > 0
        and okCloneA and reverseSource and okCloneB and reverseNextSource) then
       glitchCityHandoff.audioActive = false
-      debugLog("AUDIO REVERSE START FAILED", "tellOk=" .. safeField(okTell)
-        .. " position=" .. safeField(position)
-        .. " durationOk=" .. safeField(okDuration)
-        .. " duration=" .. safeField(duration)
-        .. " cloneA=" .. safeField(okCloneA)
-        .. " cloneB=" .. safeField(okCloneB))
+      debugLogger:log("AUDIO REVERSE START FAILED", "tellOk=" .. debugLogger:safeField(okTell)
+        .. " position=" .. debugLogger:safeField(position)
+        .. " durationOk=" .. debugLogger:safeField(okDuration)
+        .. " duration=" .. debugLogger:safeField(duration)
+        .. " cloneA=" .. debugLogger:safeField(okCloneA)
+        .. " cloneB=" .. debugLogger:safeField(okCloneB))
       return false
     end
 
@@ -2225,13 +2056,13 @@ return function(mod)
     glitchCityHandoff.audioReverseCrossfading = false
     glitchCityHandoff.audioReverseChunkCount = 1
     glitchCityHandoff.audioActive = okStart
-    debugLog(okStart and "AUDIO REVERSE STARTED" or "AUDIO REVERSE START FAILED",
-      "mode=dual_source_crossfade chunkSeconds=" .. safeField(chunk)
-      .. " crossfadeSeconds=" .. safeField(glitchCityHandoff.audioReverseCrossfadeSeconds)
-      .. " pitch=" .. safeField(glitchCityHandoff.audioReversePitch)
-      .. " startPosition=" .. safeField(reversePosition)
-      .. " duration=" .. safeField(duration)
-      .. " error=" .. safeField(startErr))
+    debugLogger:log(okStart and "AUDIO REVERSE STARTED" or "AUDIO REVERSE START FAILED",
+      "mode=dual_source_crossfade chunkSeconds=" .. debugLogger:safeField(chunk)
+      .. " crossfadeSeconds=" .. debugLogger:safeField(glitchCityHandoff.audioReverseCrossfadeSeconds)
+      .. " pitch=" .. debugLogger:safeField(glitchCityHandoff.audioReversePitch)
+      .. " startPosition=" .. debugLogger:safeField(reversePosition)
+      .. " duration=" .. debugLogger:safeField(duration)
+      .. " error=" .. debugLogger:safeField(startErr))
     return glitchCityHandoff.audioActive
   end
 
@@ -2262,17 +2093,17 @@ return function(mod)
           (glitchCityHandoff.audioExclusiveMuteCount or 0) + 1
         if glitchCityHandoff.audioExclusiveMuteCount == 1
            or glitchCityHandoff.audioExclusiveMuteCount % 60 == 0 then
-          debugLog("AUDIO EXCLUSIVE MUTE ENFORCED",
-            "managedSources=" .. safeField(muted)
-            .. " count=" .. safeField(glitchCityHandoff.audioExclusiveMuteCount))
+          debugLogger:log("AUDIO EXCLUSIVE MUTE ENFORCED",
+            "managedSources=" .. debugLogger:safeField(muted)
+            .. " count=" .. debugLogger:safeField(glitchCityHandoff.audioExclusiveMuteCount))
         end
       end
     end
 
     if not (src and nextSrc and duration and duration > chunk) then
-      debugLog("AUDIO REVERSE UPDATE FAILED", "source=" .. safeField(src)
-        .. " nextSource=" .. safeField(nextSrc)
-        .. " duration=" .. safeField(duration))
+      debugLogger:log("AUDIO REVERSE UPDATE FAILED", "source=" .. debugLogger:safeField(src)
+        .. " nextSource=" .. debugLogger:safeField(nextSrc)
+        .. " duration=" .. debugLogger:safeField(duration))
       glitchCityHandoff.audioActive = false
       return
     end
@@ -2285,13 +2116,13 @@ return function(mod)
       local nextPosition = (glitchCityHandoff.audioReversePosition or 0) - chunk
       if nextPosition < 0 then
         nextPosition = math.max(0, duration - chunk)
-        debugLog("AUDIO REVERSE WRAPPED", "duration=" .. safeField(duration)
-          .. " chunkCount=" .. safeField(glitchCityHandoff.audioReverseChunkCount))
+        debugLogger:log("AUDIO REVERSE WRAPPED", "duration=" .. debugLogger:safeField(duration)
+          .. " chunkCount=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount))
       end
       local okChunk, chunkErr = seekAndPlayReverseChunk(nextSrc, nextPosition, 0)
       if not okChunk then
-        debugLog("AUDIO REVERSE CHUNK FAILED", "position=" .. safeField(nextPosition)
-          .. " error=" .. safeField(chunkErr))
+        debugLogger:log("AUDIO REVERSE CHUNK FAILED", "position=" .. debugLogger:safeField(nextPosition)
+          .. " error=" .. debugLogger:safeField(chunkErr))
         glitchCityHandoff.audioActive = false
         return
       end
@@ -2318,18 +2149,18 @@ return function(mod)
         glitchCityHandoff.audioReverseCrossfadeElapsed = 0
         glitchCityHandoff.audioReverseCrossfading = false
         if glitchCityHandoff.audioReverseChunkCount % 25 == 0 then
-          debugLog("AUDIO REVERSE PROGRESS",
-            "position=" .. safeField(glitchCityHandoff.audioReversePosition)
-            .. " chunks=" .. safeField(glitchCityHandoff.audioReverseChunkCount)
-            .. " crossfades=" .. safeField(glitchCityHandoff.audioReverseChunkCount - 1))
+          debugLogger:log("AUDIO REVERSE PROGRESS",
+            "position=" .. debugLogger:safeField(glitchCityHandoff.audioReversePosition)
+            .. " chunks=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount)
+            .. " crossfades=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount - 1))
         end
       end
     end
   end
 
   local function stopGlitchCityAudio(reason)
-    debugLog("AUDIO STOP REQUEST", "reason=" .. safeField(reason)
-      .. " active=" .. safeField(glitchCityHandoff.audioActive)
+    debugLogger:log("AUDIO STOP REQUEST", "reason=" .. debugLogger:safeField(reason)
+      .. " active=" .. debugLogger:safeField(glitchCityHandoff.audioActive)
       .. " before=" .. musicStateSummary())
     local reverseSource = glitchCityHandoff.audioReverseSource
     local reverseNextSource = glitchCityHandoff.audioReverseNextSource
@@ -2364,14 +2195,14 @@ return function(mod)
       if game and game.data then Music.restoreMap(game.data) end
     end)
     glitchCityHandoff.audioActive = false
-    debugLog(ok and "AUDIO RESTORED" or "AUDIO RESTORE FAILED",
-      "reason=" .. safeField(reason) .. " error=" .. safeField(err)
+    debugLogger:log(ok and "AUDIO RESTORED" or "AUDIO RESTORE FAILED",
+      "reason=" .. debugLogger:safeField(reason) .. " error=" .. debugLogger:safeField(err)
       .. " after=" .. musicStateSummary())
   end
 
   local function captureGlitchCityOrigin(world, reason)
     if not (world and world.map and world.player) then
-      debugLog("ORIGIN CAPTURE FAILED", (reason or "unknown") .. " " .. playerStateSummary(world))
+      debugLogger:log("ORIGIN CAPTURE FAILED", (reason or "unknown") .. " " .. playerStateSummary(world))
       return nil
     end
     local player = world.player
@@ -2385,19 +2216,19 @@ return function(mod)
       targetY = tonumber(player.targetY),
       facing = player.facing or "down",
       capturedReason = reason,
-      capturedAt = debugTimestamp(),
+      capturedAt = debugLogger:timestamp(),
     }
     glitchCityHandoff.origin = origin
     captureGlitchCityAudio(reason or "origin_capture")
-    debugLog("ORIGIN CAPTURED", (reason or "unknown") .. " " .. playerStateSummary(world)
+    debugLogger:log("ORIGIN CAPTURED", (reason or "unknown") .. " " .. playerStateSummary(world)
       .. " " .. musicStateSummary())
     return origin
   end
 
-  beginDebugSession()
-  debugLog("MOD INITIALIZED", "session=" .. safeField(debugSessionId)
-    .. " version=" .. BUILD_VERSION .. " " .. gameVersionSummary()
-    .. " log=" .. DEBUG_LOG_FILE)
+  debugLogger:beginSession()
+  debugLogger:log("MOD INITIALIZED", "session=" .. debugLogger:safeField(debugLogger.sessionId)
+    .. " version=" .. debugLogger.buildVersion .. " " .. debugLogger:gameVersionSummary()
+    .. " log=" .. debugLogger.logFile)
 
   -- Clean shutdown marker. If the process crashes or is force-closed, the
   -- marker remains and the next launch records PREVIOUS SESSION UNCLEAN END.
@@ -2409,9 +2240,9 @@ return function(mod)
       if previousLoveQuit then ok, result = pcall(previousLoveQuit, ...) end
       if ok and result == true then cancel = true end
       if cancel then
-        debugLog("SESSION END CANCELLED", "session=" .. safeField(debugSessionId))
+        debugLogger:log("SESSION END CANCELLED", "session=" .. debugLogger:safeField(debugLogger.sessionId))
       else
-        endDebugSession(ok and "love.quit" or ("love.quit error=" .. safeField(result)))
+        debugLogger:endSession(ok and "love.quit" or ("love.quit error=" .. debugLogger:safeField(result)), playerStateSummary(activeWorld))
       end
       if not ok then error(result) end
       return result
@@ -2918,14 +2749,14 @@ return function(mod)
     -- any Glitch City code until the stable battle recovery has fully ended.
     glitchCityHandoff.armed = true
     local world = activeWorld
-    debugLog("HIDDEN BALL SELECTED", playerStateSummary(world))
+    debugLogger:log("HIDDEN BALL SELECTED", playerStateSummary(world))
     if not glitchCityHandoff.origin then
       captureGlitchCityOrigin(world, "hidden_ball_fallback")
     else
-      debugLog("ORIGIN PRESERVED", "map=" .. safeField(glitchCityHandoff.origin.mapId)
-        .. " cell=" .. safeField(glitchCityHandoff.origin.x) .. ","
-        .. safeField(glitchCityHandoff.origin.y)
-        .. " capturedReason=" .. safeField(glitchCityHandoff.origin.capturedReason))
+      debugLogger:log("ORIGIN PRESERVED", "map=" .. debugLogger:safeField(glitchCityHandoff.origin.mapId)
+        .. " cell=" .. debugLogger:safeField(glitchCityHandoff.origin.x) .. ","
+        .. debugLogger:safeField(glitchCityHandoff.origin.y)
+        .. " capturedReason=" .. debugLogger:safeField(glitchCityHandoff.origin.capturedReason))
     end
 
     -- Remove the temporary corrupted Bag first. This is a simulated item, so
@@ -3551,10 +3382,10 @@ return function(mod)
         }
       end
     end
-    debugLog("WARP ANYWHERE MENU OPENED",
-      "available=" .. safeField(#items)
-        .. " catalog=" .. safeField(#WARP_ANYWHERE_DESTINATIONS)
-        .. " " .. gameVersionSummary())
+    debugLogger:log("WARP ANYWHERE MENU OPENED",
+      "available=" .. debugLogger:safeField(#items)
+        .. " catalog=" .. debugLogger:safeField(#WARP_ANYWHERE_DESTINATIONS)
+        .. " " .. debugLogger:gameVersionSummary())
     menuGame.stack:push(ListMenu.new(menuGame, "WARP ANYWHERE", items, {
       pageJump = true,
       keyRepeat = true,
@@ -3570,11 +3401,11 @@ return function(mod)
           label = destination.label,
         }
         list:close()
-        debugLog("WARP ANYWHERE QUEUED",
-          "label=" .. safeField(destination.label)
-            .. " map=" .. safeField(destination.mapId)
-            .. " x=" .. safeField(destination.x)
-            .. " y=" .. safeField(destination.y)
+        debugLogger:log("WARP ANYWHERE QUEUED",
+          "label=" .. debugLogger:safeField(destination.label)
+            .. " map=" .. debugLogger:safeField(destination.mapId)
+            .. " x=" .. debugLogger:safeField(destination.x)
+            .. " y=" .. debugLogger:safeField(destination.y)
             .. " executeAfterModsClose=true")
       end,
     }))
@@ -3598,24 +3429,24 @@ return function(mod)
     world.emote = nil
     world.engaging = false
     if world.player then world.player.inputLocked = false end
-    debugLog("WARP ANYWHERE START",
-      "label=" .. safeField(point.label)
-        .. " map=" .. safeField(point.mapId)
-        .. " x=" .. safeField(point.x) .. " y=" .. safeField(point.y))
+    debugLogger:log("WARP ANYWHERE START",
+      "label=" .. debugLogger:safeField(point.label)
+        .. " map=" .. debugLogger:safeField(point.mapId)
+        .. " x=" .. debugLogger:safeField(point.x) .. " y=" .. debugLogger:safeField(point.y))
     Sound.play(game.data, "Teleport_Exit1")
     local ok, warpError = pcall(function()
       world:setMap(point.mapId, math.floor(point.x), math.floor(point.y),
         point.facing, { via = "trainer_fly_warp_anywhere" })
     end)
     if not ok then
-      debugLog("WARP ANYWHERE FAILED",
-        "label=" .. safeField(point.label)
-          .. " error=" .. safeField(warpError))
+      debugLogger:log("WARP ANYWHERE FAILED",
+        "label=" .. debugLogger:safeField(point.label)
+          .. " error=" .. debugLogger:safeField(warpError))
       game.stack:push(TextBox.new(game, "WARP DESTINATION\nIS NOT AVAILABLE."))
       return false
     end
-    debugLog("WARP ANYWHERE COMPLETE",
-      "label=" .. safeField(point.label) .. " " .. playerStateSummary(world))
+    debugLogger:log("WARP ANYWHERE COMPLETE",
+      "label=" .. debugLogger:safeField(point.label) .. " " .. playerStateSummary(world))
     return true
   end
 
@@ -3628,9 +3459,9 @@ return function(mod)
     local target = manager.byId and manager.byId[mod.id]
     local schema = target and manager:schemaFor(target)
     if not (target and schema) then
-      debugLog("START MENU DEBUG SHORTCUT FAILED",
-        "targetAvailable=" .. safeField(target ~= nil)
-          .. " schemaAvailable=" .. safeField(schema ~= nil))
+      debugLogger:log("START MENU DEBUG SHORTCUT FAILED",
+        "targetAvailable=" .. debugLogger:safeField(target ~= nil)
+          .. " schemaAvailable=" .. debugLogger:safeField(schema ~= nil))
       manager:notify("G1GPP OPTIONS UNAVAILABLE")
       return false
     end
@@ -3642,8 +3473,8 @@ return function(mod)
     manager.scroll = 0
     manager.backStack = {}
     manager._g1gppDirectOptions = true
-    debugLog("START MENU DEBUG SHORTCUT OPENED",
-      "rows=" .. safeField(#(manager.optionRows or {}))
+    debugLogger:log("START MENU DEBUG SHORTCUT OPENED",
+      "rows=" .. debugLogger:safeField(#(manager.optionRows or {}))
         .. " returnTarget=overworld")
     return true
   end
@@ -3835,10 +3666,10 @@ return function(mod)
     -- screen itself.
     if type(rows) ~= "table" then
       if m and m.id == mod.id then
-        debugLog("MOD MENU ROWS UNAVAILABLE",
+        debugLogger:log("MOD MENU ROWS UNAVAILABLE",
           "rowsType=" .. type(rows)
             .. " schemaType=" .. type(schema)
-            .. " modId=" .. safeField(m.id))
+            .. " modId=" .. debugLogger:safeField(m.id))
       end
       return rows
     end
@@ -3859,7 +3690,7 @@ return function(mod)
           debugGlitchCityPending = false
           debugTestBattlePending = true
           mod.log:info("G1GPP direct test battle queued")
-          debugLog("DIRECT TEST BATTLE QUEUED", playerStateSummary(activeWorld))
+          debugLogger:log("DIRECT TEST BATTLE QUEUED", playerStateSummary(activeWorld))
         end
       elseif row.id == "debug_start_glitch_city" then
         -- Action row: close the Mods screen normally, then activate the exact
@@ -3873,14 +3704,14 @@ return function(mod)
         end
         row.activate = function()
           if glitchCityHandoff.active then
-            debugLog("DIRECT GLITCH CITY QUEUE BLOCKED", "reason=already_active "
+            debugLogger:log("DIRECT GLITCH CITY QUEUE BLOCKED", "reason=already_active "
               .. playerStateSummary(activeWorld))
             return
           end
           debugTestBattlePending = false
           debugGlitchCityPending = true
           mod.log:info("G1GPP direct Glitch City activation queued")
-          debugLog("DIRECT GLITCH CITY QUEUED", playerStateSummary(activeWorld))
+          debugLogger:log("DIRECT GLITCH CITY QUEUED", playerStateSummary(activeWorld))
         end
       elseif row.id == "debug_inverted_sprites" then
         -- One-shot development action. It reproduces the volatile flag that a
@@ -3903,7 +3734,7 @@ return function(mod)
           local liveGame = manager.game or game
           local count = liveGame and liveGame.save and liveGame.save.inventory
             and liveGame.save.inventory.MASTER_BALL or 0
-          return "x" .. safeField(count)
+          return "x" .. debugLogger:safeField(count)
         end
         row.activate = function()
           local liveGame = manager.game or game
@@ -3911,28 +3742,28 @@ return function(mod)
           local data = liveGame and liveGame.data
           local before = save and save.inventory
             and (save.inventory.MASTER_BALL or 0) or 0
-          debugLog("DEBUG MASTER BALL REQUEST",
-            "before=" .. safeField(before)
-              .. " bagSlots=" .. safeField(save and Bag.slots(save))
-              .. " bagCapacity=" .. safeField(data and Bag.capacity(data)))
+          debugLogger:log("DEBUG MASTER BALL REQUEST",
+            "before=" .. debugLogger:safeField(before)
+              .. " bagSlots=" .. debugLogger:safeField(save and Bag.slots(save))
+              .. " bagCapacity=" .. debugLogger:safeField(data and Bag.capacity(data)))
           if not (save and data and data.items and data.items.MASTER_BALL) then
-            debugLog("DEBUG MASTER BALL FAILED",
-              "reason=game_or_item_unavailable before=" .. safeField(before))
+            debugLogger:log("DEBUG MASTER BALL FAILED",
+              "reason=game_or_item_unavailable before=" .. debugLogger:safeField(before))
             return
           end
           local ok, added = pcall(Bag.add, save, "MASTER_BALL", 1, data)
           local after = save.inventory.MASTER_BALL or 0
           if ok and added and after == before + 1 then
             mod.log:info("G1GPP debug added one Master Ball (now %d)", after)
-            debugLog("DEBUG MASTER BALL ADDED",
-              "before=" .. safeField(before) .. " after=" .. safeField(after)
-                .. " delta=" .. safeField(after - before))
+            debugLogger:log("DEBUG MASTER BALL ADDED",
+              "before=" .. debugLogger:safeField(before) .. " after=" .. debugLogger:safeField(after)
+                .. " delta=" .. debugLogger:safeField(after - before))
           else
-            debugLog("DEBUG MASTER BALL FAILED",
-              "before=" .. safeField(before) .. " after=" .. safeField(after)
-                .. " bagAddOk=" .. safeField(ok)
-                .. " bagAddResult=" .. safeField(added)
-                .. " reason=" .. safeField(ok and "bag_full_or_limit" or added))
+            debugLogger:log("DEBUG MASTER BALL FAILED",
+              "before=" .. debugLogger:safeField(before) .. " after=" .. debugLogger:safeField(after)
+                .. " bagAddOk=" .. debugLogger:safeField(ok)
+                .. " bagAddResult=" .. debugLogger:safeField(added)
+                .. " reason=" .. debugLogger:safeField(ok and "bag_full_or_limit" or added))
           end
         end
       elseif row.id == "debug_add_tmhm_test_kit" then
@@ -3949,12 +3780,12 @@ return function(mod)
             "TM_MEGA_PUNCH", "TM_WATER_GUN", "TM_SKY_ATTACK",
             "HM_CUT", "HM_FLY", "HM_SURF", "HM_STRENGTH", "HM_FLASH",
           }
-          debugLog("DEBUG TMHM KIT REQUEST",
+          debugLogger:log("DEBUG TMHM KIT REQUEST",
             "items=" .. table.concat(items, ",")
-              .. " bagSlots=" .. safeField(save and Bag.slots(save))
-              .. " bagCapacity=" .. safeField(data and Bag.capacity(data)))
+              .. " bagSlots=" .. debugLogger:safeField(save and Bag.slots(save))
+              .. " bagCapacity=" .. debugLogger:safeField(data and Bag.capacity(data)))
           if not (save and save.inventory and data and data.items) then
-            debugLog("DEBUG TMHM KIT FAILED", "reason=game_unavailable")
+            debugLogger:log("DEBUG TMHM KIT FAILED", "reason=game_unavailable")
             return
           end
           local addedCount, presentCount, failedCount = 0, 0, 0
@@ -3963,38 +3794,38 @@ return function(mod)
             local isHm = itemId:sub(1, 3) == "HM_"
             if isHm and before > 0 then
               presentCount = presentCount + 1
-              debugLog("DEBUG TMHM ITEM PRESENT",
-                "item=" .. itemId .. " count=" .. safeField(before))
+              debugLogger:log("DEBUG TMHM ITEM PRESENT",
+                "item=" .. itemId .. " count=" .. debugLogger:safeField(before))
             elseif not data.items[itemId] then
               failedCount = failedCount + 1
-              debugLog("DEBUG TMHM ITEM FAILED",
+              debugLogger:log("DEBUG TMHM ITEM FAILED",
                 "item=" .. itemId .. " reason=item_unavailable")
             else
               local ok, added = pcall(Bag.add, save, itemId, 1, data)
               local after = save.inventory[itemId] or 0
               if ok and added and after == before + 1 then
                 addedCount = addedCount + 1
-                debugLog("DEBUG TMHM ITEM ADDED",
-                  "item=" .. itemId .. " before=" .. safeField(before)
-                    .. " after=" .. safeField(after))
+                debugLogger:log("DEBUG TMHM ITEM ADDED",
+                  "item=" .. itemId .. " before=" .. debugLogger:safeField(before)
+                    .. " after=" .. debugLogger:safeField(after))
               else
                 failedCount = failedCount + 1
-                debugLog("DEBUG TMHM ITEM FAILED",
-                  "item=" .. itemId .. " before=" .. safeField(before)
-                    .. " after=" .. safeField(after)
-                    .. " bagAddOk=" .. safeField(ok)
-                    .. " bagAddResult=" .. safeField(added))
+                debugLogger:log("DEBUG TMHM ITEM FAILED",
+                  "item=" .. itemId .. " before=" .. debugLogger:safeField(before)
+                    .. " after=" .. debugLogger:safeField(after)
+                    .. " bagAddOk=" .. debugLogger:safeField(ok)
+                    .. " bagAddResult=" .. debugLogger:safeField(added))
               end
             end
           end
           mod.log:info(
             "G1GPP TM/HM test kit: %d added, %d already present, %d failed",
             addedCount, presentCount, failedCount)
-          debugLog("DEBUG TMHM KIT COMPLETE",
-            "added=" .. safeField(addedCount)
-              .. " alreadyPresent=" .. safeField(presentCount)
-              .. " failed=" .. safeField(failedCount)
-              .. " bagSlots=" .. safeField(Bag.slots(save)))
+          debugLogger:log("DEBUG TMHM KIT COMPLETE",
+            "added=" .. debugLogger:safeField(addedCount)
+              .. " alreadyPresent=" .. debugLogger:safeField(presentCount)
+              .. " failed=" .. debugLogger:safeField(failedCount)
+              .. " bagSlots=" .. debugLogger:safeField(Bag.slots(save)))
         end
       elseif row.id == "debug_cubone_seen" then
         -- One action controls the exact vanilla gate used by No.000. The
@@ -4010,7 +3841,7 @@ return function(mod)
           local save = liveGame and liveGame.save
           local dex = save and save.pokedex
           if not dex then
-            debugLog("DEBUG CUBONE FLAG FAILED",
+            debugLogger:log("DEBUG CUBONE FLAG FAILED",
               "reason=pokedex_unavailable")
             return
           end
@@ -4024,10 +3855,10 @@ return function(mod)
           local after = dex.seen.CUBONE == true
           mod.log:info("G1GPP debug set Cubone seen flag to %s",
             after and "SEEN" or "UNSEEN")
-          debugLog("DEBUG CUBONE FLAG CHANGED",
-            "before=" .. safeField(before)
-              .. " after=" .. safeField(after)
-              .. " cuboneOwned=" .. safeField(dex.owned
+          debugLogger:log("DEBUG CUBONE FLAG CHANGED",
+            "before=" .. debugLogger:safeField(before)
+              .. " after=" .. debugLogger:safeField(after)
+              .. " cuboneOwned=" .. debugLogger:safeField(dex.owned
                 and dex.owned.CUBONE == true)
               .. " scope=seen_flag_only")
         end
@@ -4040,14 +3871,14 @@ return function(mod)
           local liveGame = manager.game or game
           local count = ManagerState.G1.MissingNoState.count(
             liveGame and liveGame.save, liveGame and liveGame.data)
-          return "x" .. safeField(count)
+          return "x" .. debugLogger:safeField(count)
         end
         row.activate = function()
           local liveGame = manager.game or game
           local save = liveGame and liveGame.save
           local data = liveGame and liveGame.data
           if not (save and data) then
-            debugLog("DEBUG MISSINGNO WIPE FAILED",
+            debugLogger:log("DEBUG MISSINGNO WIPE FAILED",
               "reason=game_or_save_unavailable")
             return
           end
@@ -4055,17 +3886,17 @@ return function(mod)
           local removed = ManagerState.G1.MissingNoState.wipe(save, data)
           local after = ManagerState.G1.MissingNoState.count(save, data)
           mod.log:info("G1GPP debug wiped %d MissingNo. records", before - after)
-          debugLog("DEBUG MISSINGNO STATE WIPED",
-            "before=" .. safeField(before)
-              .. " after=" .. safeField(after)
-              .. " party=" .. safeField(removed.party)
-              .. " boxes=" .. safeField(removed.boxes)
-              .. " daycare=" .. safeField(removed.daycare)
-              .. " orphaned=" .. safeField(removed.orphaned)
-              .. " seenFlags=" .. safeField(removed.seen)
-              .. " ownedFlags=" .. safeField(removed.owned)
+          debugLogger:log("DEBUG MISSINGNO STATE WIPED",
+            "before=" .. debugLogger:safeField(before)
+              .. " after=" .. debugLogger:safeField(after)
+              .. " party=" .. debugLogger:safeField(removed.party)
+              .. " boxes=" .. debugLogger:safeField(removed.boxes)
+              .. " daycare=" .. debugLogger:safeField(removed.daycare)
+              .. " orphaned=" .. debugLogger:safeField(removed.orphaned)
+              .. " seenFlags=" .. debugLogger:safeField(removed.seen)
+              .. " ownedFlags=" .. debugLogger:safeField(removed.owned)
               .. " cuboneSeen=false invertedSprites=false"
-              .. " remainingParty=" .. safeField(#(save.party or {})))
+              .. " remainingParty=" .. debugLogger:safeField(#(save.party or {})))
         end
       elseif row.id == "debug_warp_anywhere" then
         row.step = nil
@@ -4097,16 +3928,13 @@ return function(mod)
         row.step = nil
         row.value = function() return "WRITE" end
         row.activate = function()
-          debugLog("MANUAL SNAPSHOT", playerStateSummary(activeWorld))
+          debugLogger:log("MANUAL SNAPSHOT", playerStateSummary(activeWorld))
         end
       elseif row.id == "debug_log_clear" then
         row.step = nil
         row.value = function() return "CLEAR" end
         row.activate = function()
-          pcall(love.filesystem.remove, DEBUG_LOG_FILE)
-          clearDriveMirror()
-          debugLogSequence = 0
-          debugLog("LOG CLEARED", playerStateSummary(activeWorld))
+          debugLogger:clear(playerStateSummary(activeWorld))
         end
       end
 
@@ -4177,7 +4005,7 @@ return function(mod)
     if #label <= width then return label end
     if not selected then return label:sub(1, width) end
 
-    local key = tostring(rows) .. ":" .. safeField(index) .. ":" .. label
+    local key = tostring(rows) .. ":" .. debugLogger:safeField(index) .. ":" .. label
     local now = ManagerState.G1.clock()
     if ManagerState.G1.marqueeKey ~= key then
       ManagerState.G1.marqueeKey = key
@@ -4206,7 +4034,7 @@ return function(mod)
     end
 
     local focusLabel = tostring(rows[index] and rows[index].label or "")
-    local focusKey = tostring(rows) .. ":" .. safeField(index)
+    local focusKey = tostring(rows) .. ":" .. debugLogger:safeField(index)
       .. ":" .. focusLabel
     if ManagerState.G1.marqueeKey ~= focusKey then
       ManagerState.G1.marqueeKey = focusKey
@@ -4478,20 +4306,20 @@ return function(mod)
     local state = glitchCityHandoff
     state.blockedExitAttempts = (state.blockedExitAttempts or 0) + 1
     local player = world and world.player
-    debugLog("CONTAINMENT EXIT BLOCKED", "kind=" .. safeField(kind)
-      .. " attempt=" .. safeField(state.blockedExitAttempts)
-      .. " map=" .. safeField(world and world.map and world.map.id)
-      .. " player=" .. safeField(player and player.cellX) .. ","
-      .. safeField(player and player.cellY)
-      .. " target=" .. safeField(targetX) .. "," .. safeField(targetY)
-      .. " detail=" .. safeField(detail))
+    debugLogger:log("CONTAINMENT EXIT BLOCKED", "kind=" .. debugLogger:safeField(kind)
+      .. " attempt=" .. debugLogger:safeField(state.blockedExitAttempts)
+      .. " map=" .. debugLogger:safeField(world and world.map and world.map.id)
+      .. " player=" .. debugLogger:safeField(player and player.cellX) .. ","
+      .. debugLogger:safeField(player and player.cellY)
+      .. " target=" .. debugLogger:safeField(targetX) .. "," .. debugLogger:safeField(targetY)
+      .. " detail=" .. debugLogger:safeField(detail))
   end
 
   local function installGlitchCityContainment(world, map)
     local state = glitchCityHandoff
     if state.containmentInstalled then return true end
     if not (world and map and map.def) then
-      debugLog("CONTAINMENT INSTALL FAILED", "world/map/definition unavailable")
+      debugLogger:log("CONTAINMENT INSTALL FAILED", "world/map/definition unavailable")
       return false
     end
 
@@ -4517,9 +4345,9 @@ return function(mod)
     map.def.connections = {}
     state.containmentInstalled = true
     state.blockedExitAttempts = 0
-    debugLog("CONTAINMENT INSTALLED", "map=" .. safeField(map.id)
-      .. " warps=" .. safeField(warpCount)
-      .. " connections=" .. safeField(connectionCount)
+    debugLogger:log("CONTAINMENT INSTALLED", "map=" .. debugLogger:safeField(map.id)
+      .. " warps=" .. debugLogger:safeField(warpCount)
+      .. " connections=" .. debugLogger:safeField(connectionCount)
       .. " mode=solid_inert_no_clamp")
     mod.log:info("G1GPP physical Glitch City containment installed on %s", tostring(map.id))
     return true
@@ -4534,12 +4362,12 @@ return function(mod)
       map.doorTiles = state.originalDoorTiles or map.doorTiles
       map.warpTiles = state.originalWarpTiles or map.warpTiles
       if map.def then map.def.connections = state.originalConnections end
-      debugLog("CONTAINMENT RESTORED", "reason=" .. safeField(reason)
-        .. " map=" .. safeField(map.id)
-        .. " blockedAttempts=" .. safeField(state.blockedExitAttempts))
+      debugLogger:log("CONTAINMENT RESTORED", "reason=" .. debugLogger:safeField(reason)
+        .. " map=" .. debugLogger:safeField(map.id)
+        .. " blockedAttempts=" .. debugLogger:safeField(state.blockedExitAttempts))
       mod.log:info("G1GPP Glitch City containment restored on %s", tostring(map.id))
     elseif state.containmentInstalled then
-      debugLog("CONTAINMENT RESTORE FAILED", "reason=" .. safeField(reason)
+      debugLogger:log("CONTAINMENT RESTORE FAILED", "reason=" .. debugLogger:safeField(reason)
         .. " map reference unavailable")
     end
     state.containmentInstalled = false
@@ -4558,10 +4386,10 @@ return function(mod)
     local map = state.mapRef
     local snapshot = state.originalBlocks
     local origin = state.origin
-    debugLog("RECOVERY REQUEST", "reason=" .. safeField(reason)
-      .. " warpToOrigin=" .. safeField(warpToOrigin)
-      .. " target=" .. safeField(origin and origin.mapId) .. "@"
-      .. safeField(origin and origin.x) .. "," .. safeField(origin and origin.y)
+    debugLogger:log("RECOVERY REQUEST", "reason=" .. debugLogger:safeField(reason)
+      .. " warpToOrigin=" .. debugLogger:safeField(warpToOrigin)
+      .. " target=" .. debugLogger:safeField(origin and origin.mapId) .. "@"
+      .. debugLogger:safeField(origin and origin.x) .. "," .. debugLogger:safeField(origin and origin.y)
       .. " current=" .. playerStateSummary(world))
     restoreGlitchCityContainment(reason)
     if map and snapshot and map.setBlock then
@@ -4572,10 +4400,10 @@ return function(mod)
         for bx = 0, snapshot.width - 1 do map:setBlock(bx, by, row[bx + 1]) end
       end
       if not rebuildRendererForTileset(map) then rebuildMapRenderer(map) end
-      debugLog("MAP DATA RESTORED", "map=" .. safeField(map.id)
-        .. " size=" .. safeField(snapshot.width) .. "x" .. safeField(snapshot.height))
+      debugLogger:log("MAP DATA RESTORED", "map=" .. debugLogger:safeField(map.id)
+        .. " size=" .. debugLogger:safeField(snapshot.width) .. "x" .. debugLogger:safeField(snapshot.height))
     else
-      debugLog("MAP DATA RESTORE SKIPPED", "map/snapshot/setBlock unavailable")
+      debugLogger:log("MAP DATA RESTORE SKIPPED", "map/snapshot/setBlock unavailable")
     end
 
     state.active = false
@@ -4604,9 +4432,9 @@ return function(mod)
     if warpToOrigin and world and origin and origin.mapId then
       local targetX = math.floor(origin.x)
       local targetY = math.floor(origin.y)
-      debugLog("DIRECT RESTORE BEGIN", "target=" .. safeField(origin.mapId)
-        .. "@" .. safeField(targetX) .. "," .. safeField(targetY)
-        .. " storedPixel=" .. safeField(origin.px) .. "," .. safeField(origin.py)
+      debugLogger:log("DIRECT RESTORE BEGIN", "target=" .. debugLogger:safeField(origin.mapId)
+        .. "@" .. debugLogger:safeField(targetX) .. "," .. debugLogger:safeField(targetY)
+        .. " storedPixel=" .. debugLogger:safeField(origin.px) .. "," .. debugLogger:safeField(origin.py)
         .. " before=" .. playerStateSummary(world))
       local ok, err = pcall(function()
         if not world.map or world.map.id ~= origin.mapId then
@@ -4642,12 +4470,12 @@ return function(mod)
         state.recoveryMessagePending = true
         mod.log:info("G1GPP direct origin restore complete (%s): %s @ %d,%d",
           tostring(reason), tostring(origin.mapId), targetX, targetY)
-        debugLog("DIRECT RESTORE RESULT", "success=true " .. playerStateSummary(world))
+        debugLogger:log("DIRECT RESTORE RESULT", "success=true " .. playerStateSummary(world))
       else
         state.recoveryMessagePending = true
         mod.log:error("G1GPP direct origin restore failed (%s): %s",
           tostring(reason), tostring(err))
-        debugLog("DIRECT RESTORE RESULT", "success=false error=" .. safeField(err)
+        debugLogger:log("DIRECT RESTORE RESULT", "success=false error=" .. debugLogger:safeField(err)
           .. " " .. playerStateSummary(world))
       end
     else
@@ -4688,10 +4516,10 @@ return function(mod)
       love.graphics.pop()
       if not recoveryLetterboxLogged then
         recoveryLetterboxLogged = true
-        debugLog("RECOVERY LETTERBOX WHITE",
-          "width=" .. safeField(ctx.ww) .. " height=" .. safeField(ctx.wh)
-          .. " pixelWidth=" .. safeField(ctx.pw) .. " pixelHeight=" .. safeField(ctx.ph)
-          .. " worldActive=" .. safeField(ctx.worldActive))
+        debugLogger:log("RECOVERY LETTERBOX WHITE",
+          "width=" .. debugLogger:safeField(ctx.ww) .. " height=" .. debugLogger:safeField(ctx.wh)
+          .. " pixelWidth=" .. debugLogger:safeField(ctx.pw) .. " pixelHeight=" .. debugLogger:safeField(ctx.ph)
+          .. " worldActive=" .. debugLogger:safeField(ctx.worldActive))
       end
     else
       recoveryLetterboxLogged = false
@@ -4741,9 +4569,9 @@ return function(mod)
       pcall(self.hangSource.setLooping, self.hangSource, false)
     end
     if world_ and world_.player then world_.player.inputLocked = true end
-    debugLog("RECOVERY SEQUENCE START", "reason=" .. safeField(self.reason)
-      .. " hangFrames=" .. safeField(self.hangFrames)
-      .. " fadeFrames=" .. safeField(self.fadeFrames)
+    debugLogger:log("RECOVERY SEQUENCE START", "reason=" .. debugLogger:safeField(self.reason)
+      .. " hangFrames=" .. debugLogger:safeField(self.hangFrames)
+      .. " fadeFrames=" .. debugLogger:safeField(self.fadeFrames)
       .. " " .. playerStateSummary(world_))
     return self
   end
@@ -4767,12 +4595,12 @@ return function(mod)
       self.normalMusicLoopSourceWasPlaying = okLoopPlaying and loopPlaying == true
       pcall(state.loopSource.setVolume, state.loopSource, 0)
     end
-    debugLog("RECOVERY NORMAL MUSIC HELD",
+    debugLogger:log("RECOVERY NORMAL MUSIC HELD",
       musicStateSummary()
-      .. " sourceRef=" .. safeField(tostring(self.normalMusicSource))
-      .. " sourcePlaying=" .. safeField(self.normalMusicSourceWasPlaying)
-      .. " loopRef=" .. safeField(tostring(self.normalMusicLoopSource))
-      .. " loopPlaying=" .. safeField(self.normalMusicLoopSourceWasPlaying))
+      .. " sourceRef=" .. debugLogger:safeField(tostring(self.normalMusicSource))
+      .. " sourcePlaying=" .. debugLogger:safeField(self.normalMusicSourceWasPlaying)
+      .. " loopRef=" .. debugLogger:safeField(tostring(self.normalMusicLoopSource))
+      .. " loopPlaying=" .. debugLogger:safeField(self.normalMusicLoopSourceWasPlaying))
   end
 
   function GlitchCityRecoveryScreen:hardStopCorruptedAudio(reason)
@@ -4792,8 +4620,8 @@ return function(mod)
       end
     end
     self.hangSource = nil
-    debugLog("RECOVERY CORRUPTED AUDIO HARD STOP",
-      "reason=" .. safeField(reason) .. " sources=" .. safeField(stopped))
+    debugLogger:log("RECOVERY CORRUPTED AUDIO HARD STOP",
+      "reason=" .. debugLogger:safeField(reason) .. " sources=" .. debugLogger:safeField(stopped))
   end
 
   function GlitchCityRecoveryScreen:restoreBehindWhite()
@@ -4804,7 +4632,7 @@ return function(mod)
     -- overworld-side message gate set by restoreGlitchCityMap.
     glitchCityHandoff.recoveryMessagePending = false
     self:muteRestoredMusic()
-    debugLog("RECOVERY RESTORED BEHIND WHITE", playerStateSummary(self.world))
+    debugLogger:log("RECOVERY RESTORED BEHIND WHITE", playerStateSummary(self.world))
   end
 
   function GlitchCityRecoveryScreen:showMessage()
@@ -4824,7 +4652,7 @@ return function(mod)
             controller.phase = "fade_out"
             controller.isOpaque = false
             controller.frames = 0
-            debugLog("RECOVERY MESSAGE COMPLETE", playerStateSummary(controller.world))
+            debugLogger:log("RECOVERY MESSAGE COMPLETE", playerStateSummary(controller.world))
           end
         ))
       end
@@ -4846,10 +4674,10 @@ return function(mod)
       if self.frames >= self.hangFrames then
         self.phase = "fade_in_white"
         self.frames = 0
-        debugLog("RECOVERY AUDIO HANG COMPLETE",
-          "mode=fixed_fragment position=" .. safeField(self.hangPosition)
-          .. " pitch=" .. safeField(self.hangPitch)
-          .. " restartFrames=" .. safeField(self.hangRestartFrames))
+        debugLogger:log("RECOVERY AUDIO HANG COMPLETE",
+          "mode=fixed_fragment position=" .. debugLogger:safeField(self.hangPosition)
+          .. " pitch=" .. debugLogger:safeField(self.hangPitch)
+          .. " restartFrames=" .. debugLogger:safeField(self.hangRestartFrames))
       end
       return
     end
@@ -4941,9 +4769,9 @@ return function(mod)
         local bg = self.previousBackgroundColor or { 0, 0, 0, 1 }
         love.graphics.setBackgroundColor(bg[1] or 0, bg[2] or 0, bg[3] or 0, bg[4] or 1)
         glitchCityHandoff.recoveryMusicWatchActive = false
-        debugLog("RECOVERY MUSIC NATIVE LIFECYCLE COMPLETE", musicStateSummary())
+        debugLogger:log("RECOVERY MUSIC NATIVE LIFECYCLE COMPLETE", musicStateSummary())
         if self.world and self.world.player then self.world.player.inputLocked = false end
-        debugLog("RECOVERY SEQUENCE COMPLETE", playerStateSummary(self.world)
+        debugLogger:log("RECOVERY SEQUENCE COMPLETE", playerStateSummary(self.world)
           .. " " .. musicStateSummary())
         if self.game.stack:top() == self then self.game.stack:pop() end
       end
@@ -5353,22 +5181,22 @@ return function(mod)
       return false
     end
     mod.log:info("G1GPP opaque multishade UI-glyph 15pct-collision area-locked Glitch City active on %s", tostring(map.id))
-    debugLog("GLITCH GLYPH TERRAIN INSTALLED",
-      "map=" .. safeField(map.id)
-      .. " themes=" .. safeField(glyphThemeCount)
-      .. " glyphTiles=" .. safeField(#glyphTiles)
-      .. " symbolTiles=" .. safeField(#symbolGlyphTiles)
+    debugLogger:log("GLITCH GLYPH TERRAIN INSTALLED",
+      "map=" .. debugLogger:safeField(map.id)
+      .. " themes=" .. debugLogger:safeField(glyphThemeCount)
+      .. " glyphTiles=" .. debugLogger:safeField(#glyphTiles)
+      .. " symbolTiles=" .. debugLogger:safeField(#symbolGlyphTiles)
       .. " collisionPositionsPreserved=true opaqueBackgrounds=true")
-    debugLog("GLITCH GLYPH DRIFT ARMED",
-      "map=" .. safeField(map.id)
-      .. " eligibleBlocks=" .. safeField(#mutationCells)
-      .. " intervalFrames=" .. safeField(glitchCityHandoff.glyphMutationIntervalFrames)
+    debugLogger:log("GLITCH GLYPH DRIFT ARMED",
+      "map=" .. debugLogger:safeField(map.id)
+      .. " eligibleBlocks=" .. debugLogger:safeField(#mutationCells)
+      .. " intervalFrames=" .. debugLogger:safeField(glitchCityHandoff.glyphMutationIntervalFrames)
       .. " blocksPerInterval=1 glyphsPerBlock=4 cameraLocal=true"
       .. " middleContrastOnly=true collisionFrozen=true")
-    debugLog("GLITCH CITY ACTIVE", "durationFrames=" .. safeField(glitchCityHandoff.durationFrames)
-      .. " origin=" .. safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.mapId)
-      .. "@" .. safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.x)
-      .. "," .. safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.y)
+    debugLogger:log("GLITCH CITY ACTIVE", "durationFrames=" .. debugLogger:safeField(glitchCityHandoff.durationFrames)
+      .. " origin=" .. debugLogger:safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.mapId)
+      .. "@" .. debugLogger:safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.x)
+      .. "," .. debugLogger:safeField(glitchCityHandoff.origin and glitchCityHandoff.origin.y)
       .. " current=" .. playerStateSummary(world))
     startGlitchCityAudio()
     return true
@@ -5407,15 +5235,15 @@ return function(mod)
           rendererRefreshed = rebuildRendererForTileset(map)
         end
         state.glyphMutationCount = (state.glyphMutationCount or 0) + 1
-        debugLog("GLITCH GLYPH DRIFT",
-          "mutation=" .. safeField(state.glyphMutationCount)
-          .. " map=" .. safeField(map.id)
-          .. " block=" .. safeField(cell.x) .. "," .. safeField(cell.y)
-          .. " phase=" .. safeField(cell.phase)
-          .. " playerBlock=" .. safeField(playerBX) .. "," .. safeField(playerBY)
+        debugLogger:log("GLITCH GLYPH DRIFT",
+          "mutation=" .. debugLogger:safeField(state.glyphMutationCount)
+          .. " map=" .. debugLogger:safeField(map.id)
+          .. " block=" .. debugLogger:safeField(cell.x) .. "," .. debugLogger:safeField(cell.y)
+          .. " phase=" .. debugLogger:safeField(cell.phase)
+          .. " playerBlock=" .. debugLogger:safeField(playerBX) .. "," .. debugLogger:safeField(playerBY)
           .. " cameraLocal=true collisionFrozen=true"
-          .. " rendererRefreshed=" .. safeField(rendererRefreshed)
-          .. " refreshError=" .. safeField(refreshError))
+          .. " rendererRefreshed=" .. debugLogger:safeField(rendererRefreshed)
+          .. " refreshError=" .. debugLogger:safeField(refreshError))
         return
       end
     end
@@ -5447,17 +5275,17 @@ return function(mod)
     if glitchCityHandoff.active then
       local exitCommand = name == "warp" or name == "move_player"
         or name == "push_screen" or name == "fade"
-      debugLog(exitCommand and "CONTAINMENT EXIT BLOCKED" or "SCRIPT BLOCKED",
-        "kind=script_command command=" .. safeField(name)
-        .. " args=" .. safeField(args) .. " " .. playerStateSummary(activeWorld))
+      debugLogger:log(exitCommand and "CONTAINMENT EXIT BLOCKED" or "SCRIPT BLOCKED",
+        "kind=script_command command=" .. debugLogger:safeField(name)
+        .. " args=" .. debugLogger:safeField(args) .. " " .. playerStateSummary(activeWorld))
       return nil
     end
     if name == "start_battle" then
-      debugLog("SCRIPT START_BATTLE", "active=" .. safeField(glitchCityHandoff.active)
-        .. " args=" .. safeField(args) .. " " .. playerStateSummary(activeWorld))
+      debugLogger:log("SCRIPT START_BATTLE", "active=" .. debugLogger:safeField(glitchCityHandoff.active)
+        .. " args=" .. debugLogger:safeField(args) .. " " .. playerStateSummary(activeWorld))
       if glitchCityHandoff.active then
         mod.log:info("G1GPP blocked scripted battle during Glitch City")
-        debugLog("BATTLE BLOCKED", "scripted battle suppressed during Glitch City")
+        debugLogger:log("BATTLE BLOCKED", "scripted battle suppressed during Glitch City")
         return nil
       end
       if not glitchCityHandoff.origin then
@@ -5641,18 +5469,18 @@ return function(mod)
     end
     local source = glitchDialogueSource(world, npc)
     local text = corruptDialogue(source)
-    debugLog("GLITCH NPC DIALOGUE",
-      "map=" .. safeField(world.map and world.map.id)
-      .. " npc=" .. safeField(npc.id)
-      .. " trainer=" .. safeField(npc.def and npc.def.trainerClass)
-      .. " moving=" .. safeField(npc.moving)
-      .. " sourceLength=" .. safeField(#tostring(source))
-      .. " outputLength=" .. safeField(#text))
+    debugLogger:log("GLITCH NPC DIALOGUE",
+      "map=" .. debugLogger:safeField(world.map and world.map.id)
+      .. " npc=" .. debugLogger:safeField(npc.id)
+      .. " trainer=" .. debugLogger:safeField(npc.def and npc.def.trainerClass)
+      .. " moving=" .. debugLogger:safeField(npc.moving)
+      .. " sourceLength=" .. debugLogger:safeField(#tostring(source))
+      .. " outputLength=" .. debugLogger:safeField(#text))
     game.stack:push(TextBox.new(game, text, function()
       npc.frozen = false
-      debugLog("GLITCH NPC DIALOGUE CLOSED",
-        "map=" .. safeField(world.map and world.map.id)
-        .. " npc=" .. safeField(npc.id))
+      debugLogger:log("GLITCH NPC DIALOGUE CLOSED",
+        "map=" .. debugLogger:safeField(world.map and world.map.id)
+        .. " npc=" .. debugLogger:safeField(npc.id))
     end))
   end
 
@@ -5681,12 +5509,12 @@ return function(mod)
         showGlitchNpcDialogue(world, npc)
         return
       end
-      debugLog("INTERACTION BLOCKED", "map=" .. safeField(world and world.map and world.map.id)
-        .. " player=" .. safeField(player and player.cellX) .. ","
-        .. safeField(player and player.cellY)
-        .. " facing=" .. safeField(player and player.facing)
-        .. " target=" .. safeField(fx) .. "," .. safeField(fy)
-        .. " runner=" .. safeField(world and world.runner and world.runner.isRunning
+      debugLogger:log("INTERACTION BLOCKED", "map=" .. debugLogger:safeField(world and world.map and world.map.id)
+        .. " player=" .. debugLogger:safeField(player and player.cellX) .. ","
+        .. debugLogger:safeField(player and player.cellY)
+        .. " facing=" .. debugLogger:safeField(player and player.facing)
+        .. " target=" .. debugLogger:safeField(fx) .. "," .. debugLogger:safeField(fy)
+        .. " runner=" .. debugLogger:safeField(world and world.runner and world.runner.isRunning
           and world.runner:isRunning()))
       return nil
     end
@@ -5749,7 +5577,7 @@ return function(mod)
   Overworld.startWarpTo = function(world, mapId, x, y, facing, onDone, opts)
     if glitchCityHandoff.active then
       logBlockedExit("scripted_warp", world, x, y,
-        "dest=" .. safeField(mapId) .. " via=" .. safeField(opts and opts.via))
+        "dest=" .. debugLogger:safeField(mapId) .. " via=" .. debugLogger:safeField(opts and opts.via))
       return nil
     end
     return originalStartWarpTo(world, mapId, x, y, facing, onDone, opts)
@@ -5779,8 +5607,8 @@ return function(mod)
     activeWorld = world
     if not debugGameLoadedMarked then
       debugGameLoadedMarked = true
-      debugLog("GAME LOADED", "session=" .. safeField(debugSessionId)
-        .. " " .. gameVersionSummary() .. " " .. playerStateSummary(world)
+      debugLogger:log("GAME LOADED", "session=" .. debugLogger:safeField(debugLogger.sessionId)
+        .. " " .. debugLogger:gameVersionSummary() .. " " .. playerStateSummary(world)
         .. " " .. musicStateSummary())
     end
 
@@ -5809,22 +5637,22 @@ return function(mod)
             glitchCityHandoff.recoveryMusicLoopTargetVolume or 1)
           pcall(loop.setLooping, loop, true)
           local okPlay, playErr = pcall(loop.play, loop)
-          debugLog("RECOVERY MUSIC LOOP HANDOFF",
-            "ok=" .. safeField(okPlay)
-            .. " error=" .. safeField(playErr)
-            .. " frames=" .. safeField(glitchCityHandoff.recoveryMusicWatchFrames)
-            .. " mainRef=" .. safeField(tostring(main))
-            .. " loopRef=" .. safeField(tostring(loop))
+          debugLogger:log("RECOVERY MUSIC LOOP HANDOFF",
+            "ok=" .. debugLogger:safeField(okPlay)
+            .. " error=" .. debugLogger:safeField(playErr)
+            .. " frames=" .. debugLogger:safeField(glitchCityHandoff.recoveryMusicWatchFrames)
+            .. " mainRef=" .. debugLogger:safeField(tostring(main))
+            .. " loopRef=" .. debugLogger:safeField(tostring(loop))
             .. " " .. musicStateSummary())
         else
-          debugLog("RECOVERY MUSIC LOOP HANDOFF",
-            "loopAlreadyPlaying=" .. safeField(loopPlaying)
-            .. " frames=" .. safeField(glitchCityHandoff.recoveryMusicWatchFrames)
+          debugLogger:log("RECOVERY MUSIC LOOP HANDOFF",
+            "loopAlreadyPlaying=" .. debugLogger:safeField(loopPlaying)
+            .. " frames=" .. debugLogger:safeField(glitchCityHandoff.recoveryMusicWatchFrames)
             .. " " .. musicStateSummary())
         end
         glitchCityHandoff.recoveryMusicWatchActive = false
       elseif glitchCityHandoff.recoveryMusicWatchFrames >= 1800 then
-        debugLog("RECOVERY MUSIC LOOP WATCH TIMEOUT", musicStateSummary())
+        debugLogger:log("RECOVERY MUSIC LOOP WATCH TIMEOUT", musicStateSummary())
         glitchCityHandoff.recoveryMusicWatchActive = false
       end
     end
@@ -5838,7 +5666,7 @@ return function(mod)
        and not world.runner:isRunning() then
       debugGlitchCityPending = false
       if glitchCityHandoff.active then
-        debugLog("DIRECT GLITCH CITY START BLOCKED", "reason=already_active "
+        debugLogger:log("DIRECT GLITCH CITY START BLOCKED", "reason=already_active "
           .. playerStateSummary(world))
       else
         escape = nil
@@ -5846,17 +5674,17 @@ return function(mod)
         glitchCityHandoff.pending = false
         glitchCityHandoff.idleFrames = 0
         captureGlitchCityOrigin(world, "direct_debug_glitch_city")
-        debugLog("DIRECT GLITCH CITY START REQUEST",
-          "battleBypassed=true durationFrames=" .. safeField(glitchCityHandoff.durationFrames)
+        debugLogger:log("DIRECT GLITCH CITY START REQUEST",
+          "battleBypassed=true durationFrames=" .. debugLogger:safeField(glitchCityHandoff.durationFrames)
           .. " " .. playerStateSummary(world))
         local ok, activated = pcall(corruptRuntimeMap, world)
         if ok and activated then
-          debugLog("DIRECT GLITCH CITY STARTED",
+          debugLogger:log("DIRECT GLITCH CITY STARTED",
             "battleBypassed=true " .. playerStateSummary(world))
         else
           glitchCityHandoff.origin = nil
-          debugLog("DIRECT GLITCH CITY START FAILED",
-            "error=" .. safeField(ok and "activation_returned_false" or activated)
+          debugLogger:log("DIRECT GLITCH CITY START FAILED",
+            "error=" .. debugLogger:safeField(ok and "activation_returned_false" or activated)
             .. " " .. playerStateSummary(world))
         end
       end
@@ -5873,8 +5701,8 @@ return function(mod)
       debugTestBattlePending = false
       local _, debugValue, debugAttackModifier = debugSettings()
       captureGlitchCityOrigin(world, "direct_test_before_battle")
-      debugLog("DIRECT TEST BATTLE START", "special=" .. safeField(debugValue)
-        .. " attackMod=" .. safeField(debugAttackModifier) .. " " .. playerStateSummary(world))
+      debugLogger:log("DIRECT TEST BATTLE START", "special=" .. debugLogger:safeField(debugValue)
+        .. " attackMod=" .. debugLogger:safeField(debugAttackModifier) .. " " .. playerStateSummary(world))
       escape = {
         world = world,
         originMap = world.map and world.map.id,
@@ -5977,13 +5805,13 @@ return function(mod)
         -- restoring the clean source map and returning to the exact pre-battle
         -- origin. This prevents destination-map state from interfering with
         -- the timed recovery warp.
-        debugLog("AREA TRANSITION DETECTED", "expected=" .. safeField(glitchCityHandoff.mapId)
+        debugLogger:log("AREA TRANSITION DETECTED", "expected=" .. debugLogger:safeField(glitchCityHandoff.mapId)
           .. " current=" .. playerStateSummary(world))
         restoreGlitchCityMap("blocked_area_transition", world, true)
       else
         glitchCityHandoff.remainingFrames = glitchCityHandoff.remainingFrames - 1
         if glitchCityHandoff.remainingFrames <= 0 then
-          debugLog("TIMER EXPIRED", playerStateSummary(world))
+          debugLogger:log("TIMER EXPIRED", playerStateSummary(world))
           glitchCityHandoff.remainingFrames = 0
           game.stack:push(GlitchCityRecoveryScreen.new(game, world, "timer"))
         end
@@ -6033,7 +5861,7 @@ return function(mod)
       if glitchCityHandoff.idleFrames >= 30 then
         glitchCityHandoff.pending = false
         glitchCityHandoff.idleFrames = 0
-        debugLog("GLITCH CITY HANDOFF READY", playerStateSummary(world))
+        debugLogger:log("GLITCH CITY HANDOFF READY", playerStateSummary(world))
 
         game.stack:push(TextBox.new(
           game,
@@ -6791,9 +6619,9 @@ return function(mod)
       -- live image with Red/Blue's measured wSpriteFlipped nibble-swap rule.
       if invertedSpriteState.active
           or (battle and battle._g1gppInvertedSprites) then
-        debugLog("INVERTED TRAINER SOURCE PRESERVED",
-          "battle=" .. safeField(battle)
-            .. " path=" .. safeField(resolved))
+        debugLogger:log("INVERTED TRAINER SOURCE PRESERVED",
+          "battle=" .. debugLogger:safeField(battle)
+            .. " path=" .. debugLogger:safeField(resolved))
         return resolved
       end
 
@@ -6995,8 +6823,8 @@ return function(mod)
     if ev and ev.mod == mod.id and ev.key == "missingno_presentation" then
       local mode = missingNoPresentationMode()
       mod.log:info("G1GPP MissingNo. presentation changed to %s", mode)
-      debugLog("MISSINGNO PRESENTATION CHANGED",
-        "mode=" .. safeField(mode) .. " saveMutation=false")
+      debugLogger:log("MISSINGNO PRESENTATION CHANGED",
+        "mode=" .. debugLogger:safeField(mode) .. " saveMutation=false")
     elseif ev and ev.mod == mod.id and ev.key == "timing_mode" then
       mod.log:info(
         "G1GPP timing changed to %s (%d frame window)",
@@ -7030,9 +6858,9 @@ return function(mod)
     local upper = classifyUpperTrainer(special, attackModifier)
     local battleWorld = finishedEscape and finishedEscape.world or activeWorld
     captureGlitchCityOrigin(battleWorld, "screen_popped_before_start_battle")
-    debugLog("BATTLE RESOLUTION", "special=" .. safeField(special)
-      .. " attackMod=" .. safeField(attackModifier)
-      .. " upperKind=" .. safeField(upper and upper.kind)
+    debugLogger:log("BATTLE RESOLUTION", "special=" .. debugLogger:safeField(special)
+      .. " attackMod=" .. debugLogger:safeField(attackModifier)
+      .. " upperKind=" .. debugLogger:safeField(upper and upper.kind)
       .. " " .. playerStateSummary(battleWorld))
 
     if upper and upper.kind == "trainer" then
