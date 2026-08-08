@@ -1,0 +1,13 @@
+{
+  "id": "trainer_fly",
+  "name": "Gen 1 Glitch Preservation Project",
+  "version": "1.1.0-beta1-missingno12.13.50-dev-dual-log-mirror",
+  "entry": "main.lua",
+  "assets_transforms": "assets_transform.lua",
+  "category": "CONTENT",
+  "priority": 200,
+  "permissions": [
+    "engine_internals"
+  ],
+  "description": "G1GPP MissingNo. Trainer OAM/BG handoff probe. Preserves the validated 12.13.43 enemy/player corruption and renders the inverted Trainer as a reversed-column+nibble-swapped BG body plus a temporary normal-column nibble-swapped 3-row head overlay during the native intro slide; the overlay disappears at the engine handoff."
+}

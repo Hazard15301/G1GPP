@@ -1,0 +1,60 @@
+# G1GPP repository safety rules
+
+# ROMs / cartridges
+*.gb
+*.gbc
+*.rom
+
+# Saves / emulator state
+*.sav
+*.srm
+*.state
+*.ss0
+*.ss1
+*.ss2
+
+# Raw emulator / research captures
+*.bin
+*.raw
+*.dmp
+*.dump
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# Runtime logs
+*.log
+g1gpp_debug.log
+
+# Build and distribution artifacts
+build/
+dist/
+release/
+*.zip
+*.7z
+*.rar
+
+# Private research/evidence directories
+research/private/
+captures/
+evidence/
+private/
+
+# Temporary / backup files
+*.tmp
+*.temp
+*.bak
+*.old
+*~
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# OS/editor junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
