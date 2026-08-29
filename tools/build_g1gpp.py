@@ -117,7 +117,15 @@ def source_files():
     return sorted(path for path in MOD.rglob("*") if path.is_file())
 
 
-def package(output, files):
+def packaged_bytes(path, manifest_version=None):
+    if manifest_version and path == MOD / "manifest.json":
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        manifest["version"] = manifest_version
+        return (json.dumps(manifest, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    return path.read_bytes()
+
+
+def package(output, files, manifest_version=None):
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, suffix=".zip",
                                      delete=False) as handle:
@@ -129,15 +137,20 @@ def package(output, files):
                 info = zipfile.ZipInfo(f"g1gpp/{relative}", ZIP_TIME)
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o100644 << 16
-                archive.writestr(info, path.read_bytes(), compresslevel=9)
+                archive.writestr(
+                    info, packaged_bytes(path, manifest_version), compresslevel=9)
     except BaseException:
         temporary.unlink(missing_ok=True)
         raise
     return temporary
 
 
-def verify_package(output, files):
-    expected = {p.relative_to(MOD).as_posix(): sha256(p) for p in files}
+def verify_package(output, files, manifest_version=None):
+    expected = {
+        path.relative_to(MOD).as_posix(): hashlib.sha256(
+            packaged_bytes(path, manifest_version)).hexdigest().upper()
+        for path in files
+    }
     with zipfile.ZipFile(output) as archive:
         records = [info for info in archive.infolist() if not info.is_dir()]
         actual = {}
@@ -154,12 +167,19 @@ def verify_package(output, files):
         raise SystemExit("FAIL: packaged files do not exactly match source")
     if banned:
         raise SystemExit("FAIL: prohibited binary entries: " + ", ".join(banned))
+    if manifest_version:
+        with zipfile.ZipFile(output) as archive:
+            packaged_manifest = json.loads(archive.read("g1gpp/manifest.json"))
+        if packaged_manifest.get("version") != manifest_version:
+            raise SystemExit("FAIL: debug manifest version override was not packaged")
     return len(actual)
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, default=Path.home() / "Downloads")
+    parser.add_argument("--debug-version",
+                        help="version written into the debug ZIP manifest and filename")
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--replace", action="store_true",
                         help="atomically replace an existing ZIP after the new one verifies")
@@ -194,13 +214,14 @@ def main():
         print(f"\nPASS: all checks in {time.monotonic() - started:.2f}s")
         return 0
 
-    output = args.output_dir / f"G1GPP_v{manifest['version']}.zip"
+    package_version = args.debug_version or manifest["version"]
+    output = args.output_dir / f"G1GPP_v{package_version}.zip"
     if output.exists() and not args.replace:
         raise SystemExit(f"FAIL: output already exists: {output}")
     files = source_files()
-    temporary = package(output, files)
+    temporary = package(output, files, args.debug_version)
     try:
-        count = verify_package(temporary, files)
+        count = verify_package(temporary, files, args.debug_version)
         temporary.replace(output)
     except BaseException:
         temporary.unlink(missing_ok=True)

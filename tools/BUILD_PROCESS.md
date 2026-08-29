@@ -17,7 +17,8 @@ python tools/build_public_release.py
 This stages an independent public file set, omits the development sentinel and
 all debug-menu modules, adds the MIT license, runs the official API-2 strict
 validator and captured-content lint against that exact stage, and creates the
-root-layout GitHub asset `G1GPP-v1.0.0-beta.zip`. It rejects wrapped ZIPs,
+root-layout GitHub asset `G1GPP-v1.0.0-beta.zip` in the Drive project's
+`GitHub` folder by default. It rejects wrapped ZIPs,
 debug-only files, and all prohibited binary game assets. Use `--check-only` to
 run every gate without producing a ZIP, or `--replace` only when deliberately
 rebuilding the same candidate.
@@ -27,7 +28,7 @@ rebuilding the same candidate.
 Run from the repository root:
 
 ```powershell
-python tools/build_g1gpp.py
+python tools/build_g1gpp.py --debug-version 1.1.0-beta1-debug12.13.NNN-description
 ```
 
 The command verifies the pinned LuaJIT hash, parses every Lua file, enforces the
@@ -35,13 +36,15 @@ The command verifies the pinned LuaJIT hash, parses every Lua file, enforces the
 focused headless Lua behavior tests, runs Gen1Recomp's 0.2.36 loader against
 the imported Red data and read-only player asset cache,
 runs the captured-content lint, checks whitespace, creates a deterministic ZIP
-in Downloads, and proves every packaged byte matches source.
+in Downloads, and proves every packaged byte matches source. `--debug-version`
+changes both the ZIP filename and packaged manifest version without changing
+the public source manifest.
 
 Known modkit warnings are fingerprinted as an exact reviewed baseline. A new,
 removed, or altered warning stops the build for review instead of disappearing
-into a long console listing. The current loader baseline is 38 raw glitch-type
-reference warnings plus the imported-encounter comparison warning; lint retains
-only that comparison warning.
+into a long console listing. After release hardening embedded the canonical
+encounter table, the loader and lint each retain only the reviewed
+imported-encounter comparison warning.
 
 Use `--check-only` while iterating when no ZIP is needed. The command refuses to
 overwrite an existing package, so a manifest version must be advanced before a
@@ -82,3 +85,5 @@ packaging mode. It:
 
 Do not repurpose a development ZIP as a public package. Only the output of
 `build_public_release.py` is eligible for GitHub Release or Mod Index testing.
+Every requested milestone keeps two explicit tracks: debug-enabled builds in
+Downloads and debug-free public builds in the Drive project's `GitHub` folder.
