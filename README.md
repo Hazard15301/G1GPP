@@ -23,7 +23,7 @@ G1GPP (Gen 1 Glitch Preservation Project) is a mod that aims to safely and accur
 
 - Red and Blue gameplay are confirmed.
 - Yellow is functional, but little testing has been done so far. Reconstructed glitches that weren't present in yellow are likewise not present now.
-- At least one of Gold, Silver, or Crystal must be imported into Gen1Recomp.
+- <ins>**At least one of Gold, Silver, or Crystal must be imported into Gen1Recomp.**</ins>
   Enable G1GPP for that Gen II edition and launch it once. You only need to get as far as the title screen.
 
 ## Features
