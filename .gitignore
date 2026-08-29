@@ -35,6 +35,23 @@ release/
 *.7z
 *.rar
 
+# Workstation-specific build configuration
+/tools/build_toolchain.json
+
+# Private development-only mod files. The public package builder also rejects
+# these explicitly, but keeping them out of GitHub makes source downloads safe.
+/g1gpp/DEVELOPMENT_BUILD_NOTICE.txt
+/g1gpp/developer_tools/
+/g1gpp/data/encounters.lua
+/g1gpp/modules/debug_battle_escape.lua
+/g1gpp/modules/debug_inventory_tools.lua
+/g1gpp/modules/debug_menu_groups.lua
+/g1gpp/modules/debug_surf_access.lua
+/g1gpp/modules/glitch_pokedex_viewer.lua
+/tools/tests/debug_battle_escape_spec.lua
+/tools/tests/debug_inventory_tools_spec.lua
+/tools/tests/debug_tools_spec.lua
+
 # Private research/evidence directories
 research/private/
 captures/

@@ -11,7 +11,13 @@ G1GPP preserves reproducible Generation I Pokémon glitches in Gen1Recomp rather
 - Trainer-Fly / long-range trainer glitch preservation baseline.
 - Special 200 Jacred/ZZAZZ behavior and related controlled glitch-state presentation.
 - Quick Warp support used by glitch-reproduction workflows.
-- Glitch City preservation behavior.
+- Glitch City preservation behavior, including the Safari Zone save/reset
+  route for Red/Blue. The remaining Safari counter follows the player outside,
+  the PA recall resolves the destination map's real fifth warp, and an outdoor
+  map without one enters G1GPP's bounded, recoverable Glitch City recreation.
+  Blue has been live-tested across missing/present fifth warps, indoor expiry,
+  both post-reload prompt choices, persistence, recovery, and debug-HUD cleanup;
+  Red shares the accepted path. Yellow-specific validation remains pending.
 - MissingNo encounter/presentation work, including Gen I-specific corrupted sprite behavior under active research.
 - Save-safety handling for destructive or volatile original glitch consequences.
 
@@ -21,7 +27,10 @@ Some original Gen I glitches can corrupt or destroy persistent save data. Public
 
 ## Development-only differences
 
-Private development builds may contain extra logging, probes, capture hooks, or research instrumentation. These are not release features and must be removed or disabled before public packaging. The current development logger includes an optional hard-coded Google Drive mirror and is explicitly development-only.
+Private development builds may contain extra logging, probes, capture hooks, or
+research instrumentation. The public builder omits their sentinel, menu
+modules, launch helpers, and user-specific mirror setup. No G1GPP debug entry or
+test shortcut is exposed by the public package.
 
 ## Asset handling
 
@@ -29,4 +38,8 @@ Private research builds historically used captured/generated assets while behavi
 
 ## Release status
 
-This file is not yet a complete end-user changelog. It must be reviewed and expanded before the first public beta/release candidate.
+The first public candidate is `v1.0.0-beta`: Red/Blue confirmed, Yellow
+provisional. Gold/Silver/Crystal are declared only so one imported Gen II cache
+can lawfully bootstrap Marill art. The authoritative release-readiness
+checklist and official Mod Index workflow are documented in
+`PUBLIC_RELEASE.md`.

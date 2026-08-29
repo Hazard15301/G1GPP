@@ -1,0 +1,22 @@
+{
+  "id": "g1gpp",
+  "name": "Gen 1 Glitch Preservation Project",
+  "version": "1.0.0-beta",
+  "api": 2,
+  "entry": "main.lua",
+  "assets_transforms": "assets_transform.lua",
+  "profile": "overhaul",
+  "affects_link": true,
+  "games": ["red", "blue", "yellow", "gold", "silver", "crystal"],
+  "game_version": ">=0.2.36 <0.3.0",
+  "category": "CONTENT",
+  "priority": 200,
+  "dependencies": [],
+  "optional_dependencies": [],
+  "conflicts": [],
+  "permissions": [
+    "engine_internals"
+  ],
+  "github": "Hazard15301/G1GPP",
+  "description": "Preserves classic Red/Blue glitch behavior and adds related discoveries, recovery paths, Pikablu, and SNAKE. Red/Blue confirmed; Yellow testing continues; Gen II entries are Marill-art bootstrap only."
+}

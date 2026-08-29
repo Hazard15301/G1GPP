@@ -1,6 +1,7 @@
 -- G1GPP persistent diagnostic logger.
 -- Kept outside main.lua so the mod entry point does not accumulate Lua locals.
--- The Google Drive mirror is development-only and must be disabled/removed for public builds.
+-- External mirrors are deliberately outside the mod sandbox. This module owns
+-- only the log inside Gen1Recomp's per-mod storage area.
 
 local Logger = {}
 Logger.__index = Logger
@@ -39,12 +40,10 @@ end
 function Logger.new(config)
   config = config or {}
   local self = setmetatable({}, Logger)
-  self.logDir = config.logDir or "trainer_fly"
+  self.logDir = config.logDir or "g1gpp"
   self.logFile = self.logDir .. "/g1gpp_debug.log"
   self.sessionMarker = self.logDir .. "/g1gpp_session_open.txt"
   self.maxBytes = tonumber(config.maxBytes) or (1024 * 1024)
-  self.driveMirrorEnabled = config.driveMirrorEnabled == true
-  self.driveMirrorFile = config.driveMirrorFile
   self.buildVersion = tostring(config.buildVersion or "unknown")
   self.sequence = 0
   self.sessionId = nil
@@ -52,8 +51,6 @@ function Logger.new(config)
   self.gameVersionLabel = "Unknown"
   self.gameVersionError = nil
   self.sessionEnded = false
-  self.driveMirrorAvailable = false
-  self.driveMirrorError = nil
   return self
 end
 
@@ -71,51 +68,6 @@ function Logger:gameVersionSummary()
     .. " gameVersionError=" .. safeField(self.gameVersionError)
 end
 
-function Logger:_writeDriveMirror(data, mode)
-  if not self.driveMirrorEnabled then return false, "disabled" end
-  if type(self.driveMirrorFile) ~= "string" or self.driveMirrorFile == "" then
-    return false, "no mirror path"
-  end
-  local ok, err = pcall(function()
-    local f, openErr = io.open(self.driveMirrorFile, mode or "ab")
-    if not f then error(openErr or "io.open failed") end
-    local writeOk, writeErr = f:write(data or "")
-    if not writeOk then
-      pcall(f.close, f)
-      error(writeErr or "write failed")
-    end
-    f:flush()
-    f:close()
-  end)
-  if ok then
-    self.driveMirrorAvailable = true
-    self.driveMirrorError = nil
-    return true, nil
-  end
-  self.driveMirrorAvailable = false
-  self.driveMirrorError = err
-  return false, err
-end
-
-function Logger:_syncDriveMirrorFromPrimary()
-  if not self.driveMirrorEnabled then return false, "disabled" end
-  if not love.filesystem.getInfo(self.logFile) then
-    return self:_writeDriveMirror("", "wb")
-  end
-  local okRead, data = pcall(love.filesystem.read, self.logFile)
-  if not okRead then
-    self.driveMirrorAvailable = false
-    self.driveMirrorError = data
-    return false, data
-  end
-  return self:_writeDriveMirror(data or "", "wb")
-end
-
-function Logger:_clearDriveMirror()
-  if not self.driveMirrorEnabled then return false, "disabled" end
-  return self:_writeDriveMirror("", "wb")
-end
-
 function Logger:_rotateIfNeeded()
   local info = love.filesystem.getInfo(self.logFile)
   if info and tonumber(info.size) and info.size >= self.maxBytes then
@@ -125,7 +77,6 @@ function Logger:_rotateIfNeeded()
     if ok and data then pcall(love.filesystem.write, old, data) end
     pcall(love.filesystem.write, self.logFile,
       "=== G1GPP DEBUG LOG ROTATED ===\n")
-    self:_syncDriveMirrorFromPrimary()
   end
 end
 
@@ -137,7 +88,6 @@ function Logger:log(event, details)
     local line = ("[%s] #%06d %-30s %s\n"):format(
       timestamp(), self.sequence, safeField(event), safeField(details or ""))
     love.filesystem.append(self.logFile, line)
-    self:_writeDriveMirror(line, "ab")
   end)
 end
 
@@ -150,7 +100,6 @@ end
 
 function Logger:beginSession()
   love.filesystem.createDirectory(self.logDir)
-  local mirrorSyncOk, mirrorSyncErr = self:_syncDriveMirrorFromPrimary()
   local previous = love.filesystem.getInfo(self.sessionMarker)
   if previous then
     local ok, prior = pcall(love.filesystem.read, self.sessionMarker)
@@ -164,11 +113,8 @@ function Logger:beginSession()
   pcall(love.filesystem.write, self.sessionMarker, self.sessionId)
   self:log("SESSION START", "session=" .. safeField(self.sessionId)
     .. " version=" .. self.buildVersion .. " " .. self:gameVersionSummary())
-  self:log(mirrorSyncOk and "DEBUG DRIVE MIRROR ACTIVE"
-      or "DEBUG DRIVE MIRROR UNAVAILABLE",
-    "devOnly=true path=" .. safeField(self.driveMirrorFile)
-      .. " startupSync=" .. safeField(mirrorSyncOk)
-      .. " error=" .. safeField(mirrorSyncErr))
+  self:log("DEBUG LOG LOCAL", "path=" .. safeField(self.logFile)
+    .. " externalMirror=separate_helper")
 
   local rbTmhmActive = self.gameVersionId == "red" or self.gameVersionId == "blue"
   self:log("MISSINGNO TMHM COMPATIBILITY",
@@ -190,7 +136,6 @@ end
 
 function Logger:clear(details)
   pcall(love.filesystem.remove, self.logFile)
-  self:_clearDriveMirror()
   self.sequence = 0
   self:log("LOG CLEARED", details)
 end

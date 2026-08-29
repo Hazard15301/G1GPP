@@ -1,13 +1,17 @@
--- Gen 1 Glitch Preservation Project (G1GPP) v1.1.0-beta1-glitchcity12.13.25-camera-local-glyph-drift
+-- Gen 1 Glitch Preservation Project (G1GPP) 1.0.0-beta
 --
 -- Milestone:
 --   * Preserve the vanilla trainer "!" and approach state while StartMenu is open.
 --   * Teleport cleanly abandons that pending approach while retaining the glitch.
---   * Capture the last opposing battler's live Special stat during the
---     intermediary trainer battle (including Transform/stat changes).
+--   * The required intermediary Trainer arms the setup; each later battle
+--     overwrites the retained opposing Special/Attack values.
+--   * Ditto's live transformed stats are retained unless Ditto is caught,
+--     matching the original capture exception.
 --   * Resolve that value through Gen1Recomp's preserved Gen-I internal index.
 --   * After that battle, re-entering the escaped trainer's map forces StartMenu.
 --   * Closing that forced menu starts the resolved level-7 encounter.
+--   * Retained encounter values are runtime-only and do not survive a new
+--     game boot/load.
 --
 -- This is a self-contained runtime patch using engine_internals. No game files
 -- are replaced on disk.
@@ -23,8 +27,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_031",
       index = 31,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_031_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -36,8 +39,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_032",
       index = 32,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_032_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -49,8 +51,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_050",
       index = 50,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_050_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -62,8 +63,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_052",
       index = 52,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_052_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -75,8 +75,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_056",
       index = 56,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_056_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -88,8 +87,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_061",
       index = 61,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_061_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -101,8 +99,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_062",
       index = 62,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_062_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -114,8 +111,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_063",
       index = 63,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_063_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -127,8 +123,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_067",
       index = 67,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_067_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -140,8 +135,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_068",
       index = 68,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_068_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -153,8 +147,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_069",
       index = 69,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_069_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -166,8 +159,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_079",
       index = 79,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_079_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -179,8 +171,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_080",
       index = 80,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_080_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -192,8 +183,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_081",
       index = 81,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_081_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -205,8 +195,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_086",
       index = 86,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_086_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -218,8 +207,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_087",
       index = 87,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_087_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -231,8 +219,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_094",
       index = 94,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_094_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -244,8 +231,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_095",
       index = 95,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_095_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -257,8 +243,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_115",
       index = 115,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_115_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -270,8 +255,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_121",
       index = 121,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_121_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -283,8 +267,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_122",
       index = 122,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_122_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -296,8 +279,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_127",
       index = 127,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_127_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -309,8 +291,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_134",
       index = 134,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_134_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -322,8 +303,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_135",
       index = 135,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_135_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -335,8 +315,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_137",
       index = 137,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_137_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -348,8 +327,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_140",
       index = 140,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_140_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -361,8 +339,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_146",
       index = 146,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_146_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -374,8 +351,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_156",
       index = 156,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_156_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -387,8 +363,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_159",
       index = 159,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_159_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -400,8 +375,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_160",
       index = 160,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_160_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -413,8 +387,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_161",
       index = 161,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_161_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -426,8 +399,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_162",
       index = 162,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_162_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -439,8 +411,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_172",
       index = 172,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_172_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -452,8 +423,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_174",
       index = 174,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_174_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -465,8 +435,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_175",
       index = 175,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_175_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -478,8 +447,7 @@ local TrainerFlyEncounterData = (function()
       id = "TF_GLITCH_181",
       index = 181,
       name = "MISSINGNO.",
-      sprite = "assets/glitch/index_181_front.png",
-      spriteSha1 = "35b4ecc245d5baa7bad87c8d507ff94ede8f5e22",
+      spriteSource = "release_safe_transform",
       sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
       observed = {
         types = { "BIRD", "NORMAL" },
@@ -492,8 +460,7 @@ local TrainerFlyEncounterData = (function()
     index = 182,
     name = "MISSINGNO.",
     specialForm = "fossil_kabutops",
-    sprite = "assets/glitch/index_182_front.png",
-    spriteSha1 = "52c9fb65cfbfcfc19f40f877e2726ebe5c8d9d1f",
+      spriteSource = "release_safe_transform",
     sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
     observed = {
       types = { "FIRE", "FIRE" },
@@ -506,8 +473,7 @@ local TrainerFlyEncounterData = (function()
     index = 183,
     name = "MISSINGNO.",
     specialForm = "fossil_aerodactyl",
-    sprite = "assets/glitch/index_183_front.png",
-    spriteSha1 = "2b8103ce478b79931f4a9264602e3ee01fb76b8d",
+      spriteSource = "release_safe_transform",
     sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
     observed = {
       types = { "FIRE", "FIRE" },
@@ -520,8 +486,7 @@ local TrainerFlyEncounterData = (function()
     index = 184,
     name = "MISSINGNO.",
     specialForm = "ghost",
-    sprite = "assets/glitch/index_184_front.png",
-    spriteSha1 = "7e97aa3a22bf5399addfefd90b615428dae171cf",
+      spriteSource = "release_safe_transform",
     sourceNameHex = "8C 88 92 92 88 8D 86 8D 8E E8 50",
     observed = {
       types = { "FIRE", "FIRE" },
@@ -642,11 +607,35 @@ local TrainerFlyEncounterData = (function()
 end)()
 
 return function(mod)
+  -- G1GPP's gameplay code is Gen I-only. Listing Gen II in the manifest lets
+  -- the public asset-transform API perform the one-time Marill-art bootstrap
+  -- from the player's active Gold, Silver, or Crystal cache; the entry itself
+  -- is a no-op.
+  if require("src.core.GameVersion").generation() == 2 then
+    mod.log:info("Gen II asset bootstrap complete; gameplay module inactive")
+    return
+  end
+
   local EncounterData = TrainerFlyEncounterData
+  local missingNoCommon = assert(love.filesystem.load(
+    mod.path .. "/modules/missingno_common.lua"))()({ mod = mod })
+
+  -- BIRD is a real unused Gen-I type-name slot, but the imported API-2 type
+  -- registry omits unused names. Register the preserved byte explicitly so
+  -- MissingNo. records have a resolvable schema reference.
+  mod.content.type_chart:register("BIRD", {
+    name = "BIRD", category = "physical", index = 0x06,
+  })
+  -- One retained glitch record exposes the display-name alias PSYCHIC rather
+  -- than the engine's stock PSYCHIC_TYPE key. Preserve that alias explicitly.
+  mod.content.type_chart:register("PSYCHIC", {
+    name = "PSYCHIC", category = "special", index = 0x18,
+  })
 
   -- Register every unused internal slot captured from Pokémon Blue as a
-  -- distinct, save-safe recomp species. They share canonical MissingNo.
-  -- battle data but retain their exact index-specific front graphics.
+  -- distinct, save-safe recomp species. Normal MissingNo. records share a
+  -- release-safe transform-generated picture; contextual fossil and ghost
+  -- forms borrow their graphics from the player's own imported cache.
   -- Keep the recomp's internal positive dex key for schema safety, but leave
   -- the ordinary list at 001-151. Runtime presentation patches below render
   -- MissingNo. as No.000 and keep it out of the selectable index.
@@ -673,7 +662,10 @@ return function(mod)
       },
       types = entry.observed.types,
       baseStats = {
-        hp = 33, attack = 136, defense = 0, speed = 29, special = 6,
+        -- API 2 validates registered stats as positive integers. The authentic
+        -- raw zero Defense byte is restored after the content registry has
+        -- built the live game data in game.ready below.
+        hp = 33, attack = 136, defense = 1, speed = 29, special = 6,
       },
       catchRate = entry.observed.catchRate,
       baseExp = 0,
@@ -708,16 +700,37 @@ return function(mod)
         }
       end)(),
       evolutions = {},
-      cry = "NIDORAN_M",
-      spriteFront = mod.assets:path(entry.sprite),
-      spriteBack = mod.assets:path("assets/glitch/missingno_back.png"),
+      cry = missingNoCommon.cryForIndex(index),
+      spriteFront = entry.specialForm == "fossil_kabutops"
+          and "save/mod-derived/g1gpp/battle/front/fossilkabutops.png"
+        or entry.specialForm == "fossil_aerodactyl"
+          and "save/mod-derived/g1gpp/battle/front/fossilaerodactyl.png"
+        or entry.specialForm == "ghost"
+          and "save/mod-derived/g1gpp/battle/front/ghost.png"
+        or "save/mod-derived/g1gpp/battle/front/g1gpp_missingno.png",
+      spriteBack = index <= 181
+          and "save/mod-derived/g1gpp/battle/back/g1gpp_missingno.png"
+        or "save/mod-derived/g1gpp/battle/back/g1gpp_missingno_contextual.png",
       frontSize = 7,
       palette = "MEWMON",
     })
-    mod.content.icons:register(entry.id, "MON")
+    mod.content.icons:register(entry.id,
+      index <= 181 and missingNoCommon.icon or "MON")
   end
 
-  mod.options:define({
+  -- Validated late Agatha/Lance party data lives outside main.lua so the
+  -- production entry file stays below Lua's local-variable ceiling.
+  local lateTrainer246247 = assert(love.filesystem.load(
+    mod.path .. "/modules/late_trainer_246_247.lua"))()({ mod = mod })
+
+  -- Development tools are enabled only in unpacked/private builds carrying the
+  -- development sentinel. The public release builder omits that sentinel and
+  -- every debug-only module, leaving only the two supported player settings.
+  mod._g1gppDevelopmentTools = love.filesystem.getInfo(
+    mod.path .. "/DEVELOPMENT_BUILD_NOTICE.txt") ~= nil
+
+  mod._g1gppOptionDefinitions = {
+    -- General presentation and timing.
     { key = "missingno_presentation", label = "MISSINGNO. ENTRY",
       type = "choice", default = "LORE_FRIENDLY",
       choices = {
@@ -731,37 +744,81 @@ return function(mod)
         { "RELAXED", "RELAXED" },
         { "EASY", "EASY" },
       } },
+  }
+
+  if mod._g1gppDevelopmentTools then
+    local developmentOptionDefinitions = {
+    -- Trainer-Fly memory and encounter testing.
     { key = "debug_special_enabled", label = "DEBUG SPECIAL",
       type = "toggle", default = false },
-    { key = "debug_special_value", label = "SPECIAL VALUE",
-      type = "number", default = 21, min = 0, max = 255, step = 1 },
-    { key = "debug_attack_modifier", label = "ATTACK MOD",
-      type = "number", default = 7, min = 1, max = 13, step = 1 },
-    { key = "debug_start_battle", label = "START TEST BATTLE",
+    { key = "debug_memory_special", label = "MEMORY SPECIAL",
+      type = "number", default = 0, min = 0, max = 255, step = 1 },
+    { key = "debug_memory_attack_modifier", label = "MEMORY ATTACK MOD",
+      type = "number", default = 0, min = 0, max = 13, step = 1 },
+    { key = "debug_start_battle", label = "TEST SPECIAL RESULT",
+      type = "toggle", default = false },
+    { key = "debug_start_pokemon_battle", label = "TEST POKEMON BATTLE",
+      type = "toggle", default = false },
+    { key = "debug_glitch_pokedex_viewer", label = "GLITCH POKEDEX VIEWER",
+      type = "toggle", default = false },
+    { key = "debug_wild_encounter_species", label = "WILD ENCOUNTER",
+      type = "toggle", default = false },
+    { key = "debug_player_name", label = "PLAYER NAME",
+      type = "toggle", default = false },
+    { key = "debug_arm_old_man", label = "ARM OLD MAN GLITCH",
+      type = "toggle", default = false },
+    { key = "debug_start_surfing", label = "SURF TEST",
+      type = "toggle", default = false },
+    { key = "debug_guaranteed_run", label = "GUARANTEED RUN",
+      type = "toggle", default = false },
+    { key = "debug_trainer_test_assist", label = "TRAINER TEST ASSIST",
       type = "toggle", default = false },
     { key = "debug_start_glitch_city", label = "START GLITCH CITY",
       type = "toggle", default = false },
-    { key = "debug_inverted_sprites", label = "TEST INVERTED SPRITES",
+    { key = "debug_safari_step_counter", label = "SAFARI STEP HUD",
       type = "toggle", default = false },
+    -- Test inventory and party setup.
     { key = "debug_add_master_ball", label = "ADD MASTER BALL",
       type = "toggle", default = false },
+    { key = "debug_add_rare_candy", label = "ADD RARE CANDY",
+      type = "toggle", default = false },
+    { key = "debug_delete_inventory_item", label = "DELETE INVENTORY ITEM",
+      type = "toggle", default = false },
+    { key = "debug_delete_party_pokemon", label = "POKEMON DELETER",
+      type = "toggle", default = false },
+    { key = "debug_reset_snake", label = "RESET SNAKE GAME",
+      type = "toggle", default = false },
     { key = "debug_add_tmhm_test_kit", label = "ADD TM/HM TEST KIT",
+      type = "toggle", default = false },
+    { key = "debug_add_test_mew", label = "ADD TEST MEW",
+      type = "toggle", default = false },
+    -- MissingNo. state and presentation testing.
+    { key = "debug_inverted_sprites", label = "TEST INVERTED SPRITES",
       type = "toggle", default = false },
     { key = "debug_cubone_seen", label = "CUBONE SEEN FLAG",
       type = "toggle", default = false },
     { key = "debug_wipe_missingno", label = "WIPE MISSINGNO STATE",
       type = "toggle", default = false },
+    -- Navigation and recovery.
     { key = "debug_warp_anywhere", label = "WARP ANYWHERE",
       type = "toggle", default = false },
     { key = "quick_warp_set", label = "SET WARP POINT",
       type = "toggle", default = false },
     { key = "quick_warp_clear", label = "CLEAR WARP POINT",
       type = "toggle", default = false },
+    -- Debug-log maintenance.
     { key = "debug_log_snapshot", label = "WRITE DEBUG SNAPSHOT",
       type = "toggle", default = false },
     { key = "debug_log_clear", label = "CLEAR DEBUG LOG",
       type = "toggle", default = false },
-  })
+    }
+    for _, definition in ipairs(developmentOptionDefinitions) do
+      mod._g1gppOptionDefinitions[#mod._g1gppOptionDefinitions + 1] = definition
+    end
+  end
+
+  mod.options:define(mod._g1gppOptionDefinitions)
+  mod._g1gppOptionDefinitions = nil
 
   local TIMING_WINDOWS = {
     STRICT = 1,
@@ -785,15 +842,8 @@ return function(mod)
     return TIMING_WINDOWS[timingMode()] or 3
   end
 
-  local function debugSettings()
-    local enabled = mod.options:get("debug_special_enabled") == true
-    local value = tonumber(mod.options:get("debug_special_value")) or 21
-    local attackModifier =
-      tonumber(mod.options:get("debug_attack_modifier")) or 7
-    value = math.max(0, math.min(255, math.floor(value)))
-    attackModifier =
-      math.max(1, math.min(13, math.floor(attackModifier)))
-    return enabled, value, attackModifier
+  local function debugSpecialEnabled()
+    return mod.options:get("debug_special_enabled") == true
   end
 
   local Overworld = require("src.world.OverworldController")
@@ -825,6 +875,7 @@ return function(mod)
   local activeWorld
   local quickWarpPoint = nil
   local debugTestBattlePending = false
+  local debugPokemonBattlePending = false
   local debugGlitchCityPending = false
   local setQuickWarpPoint
   local clearQuickWarpPoint
@@ -835,13 +886,10 @@ return function(mod)
   local warpAnywherePending = nil
   local openWarpAnywhereMenu
   local performWarpAnywhere
-  -- Declare the Trainer-Fly transient state before debug-warp closures so
-  -- those closures clear the intended locals rather than same-named globals.
+  -- Trainer-Fly orchestration remains here; the volatile enemy-memory system
+  -- itself is delegated to a focused module below.
   local escape = nil
-  local intermediaryBattle = nil
-  local capturedSpecial = nil
-  local capturedAttackModifier = nil
-  local capturedEnemySpecies = nil
+  local enemyMemory
   local pokemonByIndex = {}
   local forceMenuPending = false
   local forcedMenu = nil
@@ -852,15 +900,170 @@ return function(mod)
   -- Load through love.filesystem using the mod root exposed by Gen1Recomp;
   -- this works for both unpacked development mods and ZIP-mounted mods.
   local debugLogger = assert(love.filesystem.load(
-    mod.path .. "/modules/debug_logger.lua"))({
-      buildVersion = "1.1.0-beta1-missingno12.13.52-modular-debug-logger",
-      logDir = "trainer_fly",
+    mod.path .. "/modules/debug_logger.lua"))()({
+    buildVersion = "1.0.0-beta",
+      -- Gen1Recomp already gives this mod a private storage root. Keep every
+      -- runtime diagnostic under one clearly-owned subfolder; an optional
+      -- external development helper mirrors this file to Drive.
+      logDir = "logs",
       maxBytes = 1024 * 1024,
-      driveMirrorEnabled = true,
-      driveMirrorFile = [[G:\My Drive\Glitch Project\Project Documentation\g1gpp_debug.log]],
+    })
+  if mod._g1gppDevelopmentTools then
+    ManagerState.G1.DebugInventoryTools = assert(love.filesystem.load(
+      mod.path .. "/modules/debug_inventory_tools.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      Bag = Bag,
+      ListMenu = ListMenu,
+      TextBox = TextBox,
+      isProtectedMon = function(liveGame, mon)
+        local loaded, GameVersion = pcall(require, "src.core.GameVersion")
+        return loaded and GameVersion.isYellow()
+          and mon and mon.species == "PIKACHU"
+          and liveGame and liveGame.save and liveGame.save.player
+          and mon.otId == liveGame.save.player.id
+          and mon.ot == liveGame.save.player.name
+      end,
+      })
+  end
+  ManagerState.G1.MissingNoItemDuplication = assert(love.filesystem.load(
+    mod.path .. "/modules/missingno_item_duplication.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      Bag = Bag,
+      getGame = function() return game end,
+    })
+  ManagerState.G1.MissingNoItemQuantityDisplay = assert(love.filesystem.load(
+    mod.path .. "/modules/missingno_item_quantity_display.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      getGame = function() return game end,
+    })
+  missingNoCommon.installCryLogging(debugLogger)
+  assert(love.filesystem.load(
+    mod.path .. "/modules/cycling_road_no_bicycle.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+    })
+  enemyMemory = assert(love.filesystem.load(
+    mod.path .. "/modules/volatile_enemy_memory.lua"))()({
+      mod = mod,
+      debugLogger = debugLogger,
+    })
+  local wildEncounterOverride = assert(love.filesystem.load(
+    mod.path .. "/modules/wild_encounter_override.lua"))()({
+      mod = mod,
+      debugLogger = debugLogger,
+      ListMenu = ListMenu,
+    })
+  wildEncounterOverride.oldManGlitch = assert(love.filesystem.load(
+    mod.path .. "/modules/old_man_glitch.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      getGame = function() return game end,
+      onEncounter = function(payload)
+        if not wildEncounterOverride.oldManEncounterPending then
+          wildEncounterOverride.oldManEncounterPending = payload
+        end
+      end,
+    })
+  wildEncounterOverride.safariRetention = assert(love.filesystem.load(
+    mod.path .. "/modules/safari_zone_encounter_retention.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      getGame = function() return Game end,
+      isOldManArmed = function()
+        return wildEncounterOverride.oldManGlitch:isArmed()
+      end,
+    })
+  ManagerState.G1.SafariGlitchCity = assert(love.filesystem.load(
+    mod.path .. "/modules/safari_zone_glitch_city.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      getGame = function() return game end,
+      getWorld = function() return activeWorld end,
+    })
+  if mod._g1gppDevelopmentTools then
+    wildEncounterOverride.debugSurf = assert(love.filesystem.load(
+      mod.path .. "/modules/debug_surf_access.lua"))()({
+        mod = mod,
+        logger = debugLogger,
+        TextBox = TextBox,
+      })
+    wildEncounterOverride.debugBattleEscape = assert(love.filesystem.load(
+      mod.path .. "/modules/debug_battle_escape.lua"))()({
+        mod = mod,
+        logger = debugLogger,
+      })
+    wildEncounterOverride.debugMenuGroups = assert(love.filesystem.load(
+      mod.path .. "/modules/debug_menu_groups.lua"))()({
+        OptionRows = ManagerState.G1.OptionRows,
+        logger = debugLogger,
+      })
+  end
+  assert(love.filesystem.load(
+    mod.path .. "/modules/retired_glitch_failures.lua"))()({
+      encounterData = TrainerFlyEncounterData,
+      logger = debugLogger,
     })
   local debugGameLoadedMarked = false
   local playerStateSummary
+
+  -- Malformed Gen-I cry compatibility path. Uses Gen1Recomp's own extracted
+  -- native audio bank and validated original channel topology; no captured
+  -- ROM/audio payload is shipped. Kept outside main.lua for local-count safety.
+  assert(love.filesystem.load(
+    mod.path .. "/modules/malformed_cry_compat.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+    })
+  assert(love.filesystem.load(
+    mod.path .. "/modules/song_cry_compat.lua"))()({
+      logger = debugLogger,
+      getGame = function() return game end,
+    })
+  assert(love.filesystem.load(
+    mod.path .. "/modules/glitch_species_192.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      encounterData = TrainerFlyEncounterData,
+    })
+  assert(love.filesystem.load(
+    mod.path .. "/modules/glitch_species_197.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      encounterData = TrainerFlyEncounterData,
+    })
+  -- Full retained roster. This module patches the six earlier specialist
+  -- records and registers the other 39, using exact locally reconstructed
+  -- front/back/icon/name images and the accepted per-index battle records.
+  TrainerFlyFullRoster = assert(love.filesystem.load(
+    mod.path .. "/modules/glitch_species_full_roster.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      encounterData = TrainerFlyEncounterData,
+    })
+  PokedexAnomalyController = assert(love.filesystem.load(
+    mod.path .. "/modules/pokedex_anomaly_recovery.lua"))()({
+      logger = debugLogger,
+    })
+  assert(love.filesystem.load(
+    mod.path .. "/modules/glitch_species_255.lua"))()({
+      logger = debugLogger,
+    })
+  assert(love.filesystem.load(
+    mod.path .. "/modules/pikablu_marill.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+    })
+  ManagerState.G1.SnakePC = assert(love.filesystem.load(
+    mod.path .. "/modules/snake_pc_minigame.lua"))()({
+      mod = mod,
+      logger = debugLogger,
+      getGame = function() return game end,
+      TextBox = TextBox,
+      Theme = ManagerState.G1.Theme,
+    })
 
   -- Gen1Recomp correctly deduplicates ordinary starting moves. Red/Blue's
   -- normal MissingNo. records are a narrow ROM-data exception: their first
@@ -1292,6 +1495,7 @@ return function(mod)
       displayDef.dexEntry = canonicalEntry
       screen.forceOwned = true
       screen.def = displayDef
+      screen._g1gppMissingNoBlankDex = mode == "LORE_FRIENDLY"
       debugLogger:log("MISSINGNO DEX PAGE PREPARED",
         "species=" .. debugLogger:safeField(species)
           .. " mode=" .. debugLogger:safeField(mode)
@@ -1301,6 +1505,19 @@ return function(mod)
           .. " onDone=" .. debugLogger:safeField(type(onDone) == "function"))
     end
     return screen
+  end
+
+  -- A newline-only text key is stripped by the stock page splitter, which
+  -- otherwise replaces the authentic blank MissingNo. description with its
+  -- own "Data unknown." fallback. Preserve the original blank lower panel.
+  DexEntryMenu._g1gppMissingNoOriginalDraw =
+    DexEntryMenu._g1gppMissingNoOriginalDraw or DexEntryMenu.draw
+  local originalMissingNoDexDraw = DexEntryMenu._g1gppMissingNoOriginalDraw
+  function DexEntryMenu:draw()
+    originalMissingNoDexDraw(self)
+    if not self._g1gppMissingNoBlankDex then return end
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.rectangle("fill", 8, 80, 144, 56)
   end
 
 
@@ -1438,6 +1655,29 @@ return function(mod)
             g.draw(source, qLeft, dx + sourceHalf, sy)
           end
         end
+      elseif kind == "trainer_postscale_bg_reverse_headless" then
+        -- Intro-only BG variant: identical to trainer_postscale_bg_reverse,
+        -- except the top three final hardware rows (12 source pixels) are
+        -- omitted so the temporary moving 7x3 OAM head does not compete with
+        -- an underlying BG head. The normal full BG picture returns when the
+        -- intro slide completes.
+        local effectiveW = math.min(w, 28)
+        local effectiveH = math.min(h, 28)
+        local sourceBlock = 4
+        local sourceHalf = 2
+        local cols = math.floor(effectiveW / sourceBlock)
+        local headSourceRows = 12
+        for sy = headSourceRows, effectiveH - 1 do
+          for destCol = 0, cols - 1 do
+            local sourceCol = cols - 1 - destCol
+            local sx = sourceCol * sourceBlock
+            local dx = destCol * sourceBlock
+            local qRight = g.newQuad(sx + sourceHalf, sy, sourceHalf, 1, w, h)
+            local qLeft = g.newQuad(sx, sy, sourceHalf, 1, w, h)
+            g.draw(source, qRight, dx, sy)
+            g.draw(source, qLeft, dx + sourceHalf, sy)
+          end
+        end
       elseif kind == "trainer_postscale_nibble_swap" then
         -- Authentic Red/Blue Trainer-back corruption, expressed in
         -- Gen1Recomp's pre-draw source space.
@@ -1558,13 +1798,14 @@ return function(mod)
 
     local kind
     if img == self.playerBackPic then
-      -- MissingNo. uses the normal runtime Trainer back picture and reproduces
-      -- the original split behavior with one shared corrupted 7x7 buffer:
-      -- the BG body uses reversed 7-column placement, while the temporary OAM
-      -- head uses ordinary column order. Gen1Recomp performs the 2x draw scale,
-      -- so trainer_postscale_bg_reverse applies the source-space equivalent of
-      -- post-ScaleSpriteByTwo nibble corruption plus reversed 4px source columns.
-      kind = "trainer_postscale_bg_reverse"
+      -- During the intro slide, suppress the BG copy of the top 7x3 OAM-head
+      -- region so only the independently moving head is visible there.
+      -- Once introSlide reaches zero, return to the complete BG Trainer image.
+      if self._g1gppMaskTrainerBgHead then
+        kind = "trainer_postscale_bg_reverse_headless"
+      else
+        kind = "trainer_postscale_bg_reverse"
+      end
     elseif img == self.trainerPic then
       kind = "reverse"
     elseif self.player and img == self.player.sprite then
@@ -1662,6 +1903,13 @@ return function(mod)
     return padL, h - 1 - bottom
   end
 
+  local function invertedSpriteErrorHandler(err)
+    -- Gen1Recomp's public mod sandbox does not expose Lua's debug library.
+    -- xpcall still requires an error handler, so preserve the useful message
+    -- without relying on the unavailable traceback helper.
+    return tostring(err)
+  end
+
   local function invertedTrainerHeadImage(battle)
     local source = originalPicImage(battle, battle.playerBackPic)
     if not source then return nil end
@@ -1715,7 +1963,7 @@ return function(mod)
         end
         g.setCanvas(previousCanvas)
         g.pop()
-      end, debug.traceback)
+      end, invertedSpriteErrorHandler)
       if not okDraw then
         pcall(g.setCanvas, previousCanvas)
         pcall(g.pop)
@@ -1723,16 +1971,82 @@ return function(mod)
         debugLogger:log("INVERTED TRAINER OAM BUILD FAILED", "error=" .. debugLogger:safeField(drawError))
         return nil
       end
-      bySource.trainer_oam_21tile = canvas
-      battle._g1gppInvertedCanvases[#battle._g1gppInvertedCanvases + 1] = canvas
+      -- Subtractive cap-mask probe: rebuild the moving 28x12 head canvas
+      -- without the original cap/brim pixels in the target region, then draw
+      -- only the mirrored cap there. This should remove the "both directions"
+      -- look caused by retaining left-facing cap pixels under the mirrored one.
+      local probe = love.graphics.newCanvas(cols * tile, rows * tile)
+      local probePrev = g.getCanvas and g.getCanvas() or nil
+      local okProbe, probeErr = xpcall(function()
+        g.push("all")
+        g.setCanvas(probe)
+        g.clear(0, 0, 0, 0)
+        g.setColor(1, 1, 1, 1)
+
+        local capX, capY = 0, 0
+        local capW, capH = 24, 8
+        local fullW, fullH = cols * tile, rows * tile
+
+        -- Preserve everything outside the cap target region.
+        -- Lower band (y=8..11) remains unchanged.
+        local lower = g.newQuad(0, capH, fullW, fullH - capH, fullW, fullH)
+        g.draw(canvas, lower, 0, capH)
+
+        -- Upper-right strip outside the cap rect remains unchanged.
+        local upperRightW = fullW - (capX + capW)
+        if upperRightW > 0 then
+          local upperRight = g.newQuad(capX + capW, 0, upperRightW, capH, fullW, fullH)
+          g.draw(canvas, upperRight, capX + capW, 0)
+        end
+
+        -- Direction correction: 12.13.65's mirrored replacement read
+        -- left-facing in slow motion. Keep the clean subtractive mask, but
+        -- restore the cap region's native orientation and shift it 2 source
+        -- pixels (4 final pixels) to the right.
+        local capShiftX = 2
+        local cap = g.newQuad(capX, capY, capW, capH, fullW, fullH)
+        g.draw(canvas, cap, capX + capShiftX, capY)
+
+        g.setCanvas(probePrev)
+        g.pop()
+      end, invertedSpriteErrorHandler)
+      if not okProbe then
+        pcall(g.setCanvas, probePrev)
+        pcall(g.pop)
+        pcall(probe.release, probe)
+        debugLogger:log("INVERTED TRAINER CAP MASK PROBE FAILED",
+          "error=" .. debugLogger:safeField(probeErr))
+        return nil
+      end
+      pcall(canvas.release, canvas)
+      bySource.trainer_oam_21tile = probe
+      battle._g1gppInvertedCanvases[#battle._g1gppInvertedCanvases + 1] = probe
       debugLogger:log("INVERTED TRAINER OAM TILE MAP",
-        "cols=7 rows=3 sourceTile=4 order=normal topRows=0..2")
+        "cols=7 rows=3 sourceTile=4 order=normal capMaskSubtractive=true capRect=0,0,24,8 capMirrored=false capShiftX=2 wholeHeadFlip=false")
     end
     return bySource.trainer_oam_21tile
   end
 
   function BattleState:drawPicsLayer(slide, sx, sy, onlySide, skipMenuClip)
+    local maskTrainerBgHead =
+      self._g1gppInvertedSprites
+      and onlySide ~= "enemy"
+      and self.showPlayerBack
+      and self.playerBackPic
+      and self.introSlide
+      and self.introSlide > 0
+    if maskTrainerBgHead then
+      self._g1gppMaskTrainerBgHead = true
+    end
     originalDrawPicsLayer(self, slide, sx, sy, onlySide, skipMenuClip)
+    self._g1gppMaskTrainerBgHead = nil
+
+    if maskTrainerBgHead and not self._g1gppTrainerBgHeadMaskLogged then
+      self._g1gppTrainerBgHeadMaskLogged = true
+      debugLogger:log("INVERTED TRAINER BG HEAD MASK ACTIVE",
+        "sourceRows=0..11 finalRows=0..23 introOnly=true")
+    end
+
     if not self._g1gppInvertedSprites
        or onlySide == "enemy"
        or not self.showPlayerBack
@@ -1744,23 +2058,46 @@ return function(mod)
 
     local head = invertedTrainerHeadImage(self)
     if not head then return end
-    local w, h = head:getDimensions()
+    local headW, headH = head:getDimensions()
     local scale = BattleState.BATTLE_SCALE_DEFAULT
       and BattleState.BATTLE_SCALE_DEFAULT.back or 2
     local padL = self._g1gppTrainerSourcePadL or 0
     local padBottom = self._g1gppTrainerSourcePadBottom or 0
-    local dx, dy = BattleState.backPlacement(w, h, padBottom, padL, scale)
+
+    -- Anchor the temporary 7x3 OAM head at the origin of the complete
+    -- 32x32 Trainer back picture. The original hardware head is carved out
+    -- of the already-positioned 7x7 picture; it is not independently
+    -- bottom-aligned as a 28x12 image. Using the head canvas dimensions here
+    -- moved the overlay vertically relative to the BG body.
+    local placementW, placementH = 32, 32
+    local source = originalPicImage(self, self.playerBackPic)
+    if source then
+      local okDims, sourceW, sourceH = pcall(source.getDimensions, source)
+      if okDims and sourceW and sourceH then
+        placementW, placementH = sourceW, sourceH
+      end
+    end
+    local dx, dy = BattleState.backPlacement(
+      placementW, placementH, padBottom, padL, scale)
     if not self._g1gppTrainerHeadGeometryLogged then
       self._g1gppTrainerHeadGeometryLogged = true
       debugLogger:log("INVERTED TRAINER OAM GEOMETRY",
-        "pipeline=post_scale_equivalent"
-          .. " sourceW=" .. debugLogger:safeField(w)
-          .. " sourceH=" .. debugLogger:safeField(h)
+        "pipeline=post_scale_equivalent_full_source_anchor_cap_direction_rightshift"
+          .. " placementW=" .. debugLogger:safeField(placementW)
+          .. " placementH=" .. debugLogger:safeField(placementH)
+          .. " headW=" .. debugLogger:safeField(headW)
+          .. " headH=" .. debugLogger:safeField(headH)
+          .. " padL=" .. debugLogger:safeField(padL)
+          .. " padBottom=" .. debugLogger:safeField(padBottom)
           .. " scale=" .. debugLogger:safeField(scale)
-          .. " finalW=" .. debugLogger:safeField(w * scale)
-          .. " finalH=" .. debugLogger:safeField(h * scale))
+          .. " finalHeadW=" .. debugLogger:safeField(headW * scale)
+          .. " finalHeadH=" .. debugLogger:safeField(headH * scale)
+          .. " dx=" .. debugLogger:safeField(dx)
+          .. " dy=" .. debugLogger:safeField(dy))
     end
     love.graphics.setColor(1, 1, 1, 1)
+    -- Draw the moving 7x3 head normally. Any orientation change is confined
+    -- to the localized in-canvas cap overwrite above.
     love.graphics.draw(head,
       dx + (slide or 0) + (sx or 0) + self:picOffset("back"),
       dy + (sy or 0), 0, scale, scale)
@@ -1921,8 +2258,28 @@ return function(mod)
   }
 
   local function musicRuntimeState()
+    -- Current public Gen1Recomp deliberately hides Music's private state, but
+    -- exposes the active labels and the chip playback source. Prefer that
+    -- supported surface so Glitch City does not depend on debug.getupvalue.
+    if Music and Music.current and Music.mapSong then
+      local okChip, ChipAudio = pcall(require, "src.core.ChipAudio")
+      local source
+      if okChip and ChipAudio and ChipAudio.currentSource then
+        local okSource, value = pcall(ChipAudio.currentSource)
+        if okSource then source = value end
+      end
+      return {
+        current = Music.current(),
+        mapSong = Music.mapSong(),
+        chip = source ~= nil,
+        source = source,
+        loopSource = nil,
+        failed = {},
+        public = true,
+      }
+    end
     if not (debug and debug.getupvalue and Music and Music.play) then
-      return nil, "debug.getupvalue unavailable"
+      return nil, "public Music state and debug.getupvalue unavailable"
     end
     for i = 1, 32 do
       local name, value = debug.getupvalue(Music.play, i)
@@ -1971,24 +2328,82 @@ return function(mod)
     debugLogger:log("AUDIO CAPTURED", debugLogger:safeField(reason) .. " " .. musicStateSummary())
   end
 
-  local function prepareReverseSource(src, volume)
-    pcall(src.setLooping, src, false)
-    pcall(src.setVolume, src, volume or 0)
-    pcall(src.setPitch, src, glitchCityHandoff.audioReversePitch or 0.50)
-    pcall(src.setFilter, src, {
-      type = "lowpass", volume = 1, highgain = 0.25,
-    })
+  local function reverseSoundData(forward, maxSeconds)
+    if not (forward and love and love.sound and love.sound.newSoundData) then
+      return nil, "SoundData API unavailable"
+    end
+    local okInfo, samples, rate, bits, channels = pcall(function()
+      return forward:getSampleCount(), forward:getSampleRate(),
+        forward:getBitDepth(), forward:getChannelCount()
+    end)
+    if not okInfo or not samples or samples <= 0 then
+      return nil, "invalid rendered SoundData"
+    end
+    local boundedSamples = samples
+    if tonumber(maxSeconds) and tonumber(maxSeconds) > 0 then
+      boundedSamples = math.min(samples,
+        math.max(1, math.floor(rate * tonumber(maxSeconds))))
+    end
+    local reversed = love.sound.newSoundData(
+      boundedSamples, rate, bits, channels)
+    for i = 0, boundedSamples - 1 do
+      local sourceIndex = boundedSamples - 1 - i
+      for channel = 1, channels do
+        reversed:setSample(i, channel, forward:getSample(sourceIndex, channel))
+      end
+    end
+    return reversed, nil, boundedSamples / rate
   end
 
-  local function seekAndPlayReverseChunk(src, position, volume)
-    if not src then return false, "source=nil" end
-    pcall(src.stop, src)
-    prepareReverseSource(src, volume or 0)
-    local okSeek, seekErr = pcall(src.seek, src, position, "seconds")
-    local okPlay, playErr = pcall(src.play, src)
-    if not okSeek then return false, "seek=" .. debugLogger:safeField(seekErr) end
-    if not okPlay then return false, "play=" .. debugLogger:safeField(playErr) end
-    return true, nil
+  local function renderBackwardSong(song)
+    local data = game and game.data
+    local songs = data and data.audio and data.audio.songs
+    local header = songs and songs[song]
+    if not header then return nil, "song definition unavailable" end
+    -- Twenty source seconds become roughly forty seconds at the Glitch City
+    -- half-speed pitch, covering the full thirty-second corruption phase
+    -- without an audible reversed-loop restart.
+    -- Keep this as one bounded runtime render so no audio asset is packaged.
+    -- Music replacement mods commonly replace the cartridge header with an
+    -- intro/loop file pair. Decode that already-mounted runtime file when it
+    -- exists; otherwise render the ordinary cartridge chip program.
+    local seconds = 20
+    local forward, renderMode
+    if header.loopFile or header.file then
+      local runtimeFile = header.loopFile or header.file
+      local okDecode, decoded = pcall(love.sound.newSoundData, runtimeFile)
+      if not okDecode or not decoded then
+        return nil, "runtime file decode failed: "
+          .. debugLogger:safeField(decoded)
+      end
+      forward = decoded
+      renderMode = header.loopFile and "runtime_loop_file" or "runtime_file"
+    elseif header.chip or (header.address and header.bank) then
+      local okSynth, ChipSynth = pcall(require, "src.core.ChipSynth")
+      if not okSynth or not ChipSynth then
+        return nil, "ChipSynth unavailable"
+      end
+      local okRender, rendered = pcall(function()
+        local engine = ChipSynth.newEngine(data, header, { allowLoops = true })
+        return ChipSynth.soundData(
+          engine, math.floor(seconds * ChipSynth.SAMPLE_RATE), 2)
+      end)
+      if not okRender or not rendered then
+        return nil, "chip render failed: " .. debugLogger:safeField(rendered)
+      end
+      forward = rendered
+      renderMode = "runtime_chip"
+    else
+      return nil, "active song has no decodable runtime definition"
+    end
+    local reversed, reverseErr, renderedSeconds =
+      reverseSoundData(forward, seconds)
+    if not reversed then return nil, reverseErr end
+    local okSource, source = pcall(love.audio.newSource, reversed, "static")
+    if not okSource or not source then
+      return nil, "reverse source failed: " .. debugLogger:safeField(source)
+    end
+    return source, nil, renderedSeconds, renderMode
   end
 
   local function startGlitchCityAudio()
@@ -1997,7 +2412,11 @@ return function(mod)
       .. " capturedMapSong=" .. debugLogger:safeField(glitchCityHandoff.audioCapturedMapSong)
       .. " before=" .. musicStateSummary())
     local state, err = musicRuntimeState()
-    if not state or not state.source then
+    local song = glitchCityHandoff.audioCapturedSong
+      or (state and state.current)
+      or glitchCityHandoff.audioCapturedMapSong
+      or (state and state.mapSong)
+    if not state or not song then
       glitchCityHandoff.audioActive = false
       debugLogger:log("AUDIO REVERSE START FAILED", "error=" .. debugLogger:safeField(err)
         .. " state=" .. musicStateSummary())
@@ -2005,29 +2424,23 @@ return function(mod)
     end
 
     local src = state.source
-    local okTell, position = pcall(src.tell, src, "seconds")
-    local okDuration, duration = pcall(src.getDuration, src, "seconds")
-    local okCloneA, reverseSource = pcall(src.clone, src)
-    local okCloneB, reverseNextSource = pcall(src.clone, src)
-    if not (okTell and type(position) == "number"
-       and okDuration and type(duration) == "number" and duration > 0
-       and okCloneA and reverseSource and okCloneB and reverseNextSource) then
+    local originalVolume = 0.7
+    if src then
+      local okVolume, value = pcall(src.getVolume, src)
+      if okVolume and type(value) == "number" then originalVolume = value end
+    end
+    local reverseSource, renderErr, duration, renderMode = renderBackwardSong(song)
+    if not reverseSource then
       glitchCityHandoff.audioActive = false
-      debugLogger:log("AUDIO REVERSE START FAILED", "tellOk=" .. debugLogger:safeField(okTell)
-        .. " position=" .. debugLogger:safeField(position)
-        .. " durationOk=" .. debugLogger:safeField(okDuration)
-        .. " duration=" .. debugLogger:safeField(duration)
-        .. " cloneA=" .. debugLogger:safeField(okCloneA)
-        .. " cloneB=" .. debugLogger:safeField(okCloneB))
+      debugLogger:log("AUDIO REVERSE START FAILED",
+        "mode=runtime_pcm_reverse song=" .. debugLogger:safeField(song)
+        .. " error=" .. debugLogger:safeField(renderErr))
       return false
     end
 
-    local chunk = glitchCityHandoff.audioReverseChunkSeconds
-    local reversePosition = math.max(0, math.min(position, duration - chunk))
     glitchCityHandoff.audioOriginalSource = src
     glitchCityHandoff.audioOriginalLoopSource = state.loopSource
-    local okVolume, originalVolume = pcall(src.getVolume, src)
-    glitchCityHandoff.audioOriginalVolume = okVolume and originalVolume or 1
+    glitchCityHandoff.audioOriginalVolume = originalVolume
     local okLoopVolume, originalLoopVolume = false, 1
     if state.loopSource then
       okLoopVolume, originalLoopVolume = pcall(state.loopSource.getVolume, state.loopSource)
@@ -2035,21 +2448,31 @@ return function(mod)
     glitchCityHandoff.audioOriginalLoopVolume = okLoopVolume and originalLoopVolume or 1
     glitchCityHandoff.audioExclusiveMuteCount = 0
 
-    pcall(src.setVolume, src, 0)
-    pcall(src.pause, src)
+    if src then
+      pcall(src.setVolume, src, 0)
+      pcall(src.pause, src)
+    end
     if state.loopSource then
       pcall(state.loopSource.setVolume, state.loopSource, 0)
       pcall(state.loopSource.pause, state.loopSource)
     end
 
-    prepareReverseSource(reverseSource, glitchCityHandoff.audioOriginalVolume or 1)
-    prepareReverseSource(reverseNextSource, 0)
-    local okStart, startErr = seekAndPlayReverseChunk(
-      reverseSource, reversePosition, glitchCityHandoff.audioOriginalVolume or 1)
+    -- Stop the engine-managed stream only after the replacement has rendered;
+    -- mapSong remains remembered, so Music.restoreMap can recover it later.
+    Music.stop()
+    pcall(reverseSource.setLooping, reverseSource, true)
+    pcall(reverseSource.setVolume, reverseSource,
+      glitchCityHandoff.audioOriginalVolume or 0.7)
+    pcall(reverseSource.setPitch, reverseSource,
+      glitchCityHandoff.audioReversePitch or 0.50)
+    pcall(reverseSource.setFilter, reverseSource, {
+      type = "lowpass", volume = 1, highgain = 0.25,
+    })
+    local okStart, playResult = pcall(reverseSource.play, reverseSource)
 
     glitchCityHandoff.audioReverseSource = reverseSource
-    glitchCityHandoff.audioReverseNextSource = reverseNextSource
-    glitchCityHandoff.audioReversePosition = reversePosition
+    glitchCityHandoff.audioReverseNextSource = nil
+    glitchCityHandoff.audioReversePosition = 0
     glitchCityHandoff.audioReverseDuration = duration
     glitchCityHandoff.audioReverseElapsed = 0
     glitchCityHandoff.audioReverseCrossfadeElapsed = 0
@@ -2057,104 +2480,25 @@ return function(mod)
     glitchCityHandoff.audioReverseChunkCount = 1
     glitchCityHandoff.audioActive = okStart
     debugLogger:log(okStart and "AUDIO REVERSE STARTED" or "AUDIO REVERSE START FAILED",
-      "mode=dual_source_crossfade chunkSeconds=" .. debugLogger:safeField(chunk)
-      .. " crossfadeSeconds=" .. debugLogger:safeField(glitchCityHandoff.audioReverseCrossfadeSeconds)
+      "mode=runtime_pcm_reverse source=" .. debugLogger:safeField(renderMode)
+      .. " song=" .. debugLogger:safeField(song)
+      .. " renderedSeconds=" .. debugLogger:safeField(duration)
       .. " pitch=" .. debugLogger:safeField(glitchCityHandoff.audioReversePitch)
-      .. " startPosition=" .. debugLogger:safeField(reversePosition)
-      .. " duration=" .. debugLogger:safeField(duration)
-      .. " error=" .. debugLogger:safeField(startErr))
+      .. " playResult=" .. debugLogger:safeField(playResult))
     return glitchCityHandoff.audioActive
   end
 
   local function updateGlitchCityReverseAudio(dt)
     if not glitchCityHandoff.audioActive then return end
     local src = glitchCityHandoff.audioReverseSource
-    local nextSrc = glitchCityHandoff.audioReverseNextSource
-    local duration = glitchCityHandoff.audioReverseDuration
-    local chunk = glitchCityHandoff.audioReverseChunkSeconds
-    local crossfade = glitchCityHandoff.audioReverseCrossfadeSeconds
-    local delta = tonumber(dt) or (1 / 60)
-
-    local state = musicRuntimeState()
-    if state then
-      local muted = 0
-      if state.source and state.source ~= src and state.source ~= nextSrc then
-        pcall(state.source.setVolume, state.source, 0)
-        pcall(state.source.pause, state.source)
-        muted = muted + 1
-      end
-      if state.loopSource and state.loopSource ~= src and state.loopSource ~= nextSrc then
-        pcall(state.loopSource.setVolume, state.loopSource, 0)
-        pcall(state.loopSource.pause, state.loopSource)
-        muted = muted + 1
-      end
-      if muted > 0 then
-        glitchCityHandoff.audioExclusiveMuteCount =
-          (glitchCityHandoff.audioExclusiveMuteCount or 0) + 1
-        if glitchCityHandoff.audioExclusiveMuteCount == 1
-           or glitchCityHandoff.audioExclusiveMuteCount % 60 == 0 then
-          debugLogger:log("AUDIO EXCLUSIVE MUTE ENFORCED",
-            "managedSources=" .. debugLogger:safeField(muted)
-            .. " count=" .. debugLogger:safeField(glitchCityHandoff.audioExclusiveMuteCount))
-        end
-      end
-    end
-
-    if not (src and nextSrc and duration and duration > chunk) then
-      debugLogger:log("AUDIO REVERSE UPDATE FAILED", "source=" .. debugLogger:safeField(src)
-        .. " nextSource=" .. debugLogger:safeField(nextSrc)
-        .. " duration=" .. debugLogger:safeField(duration))
+    if not src then
+      debugLogger:log("AUDIO REVERSE UPDATE FAILED", "source=nil")
       glitchCityHandoff.audioActive = false
       return
     end
-
-    glitchCityHandoff.audioReverseElapsed =
-      glitchCityHandoff.audioReverseElapsed + delta
-
-    if not glitchCityHandoff.audioReverseCrossfading
-       and glitchCityHandoff.audioReverseElapsed >= (chunk - crossfade) then
-      local nextPosition = (glitchCityHandoff.audioReversePosition or 0) - chunk
-      if nextPosition < 0 then
-        nextPosition = math.max(0, duration - chunk)
-        debugLogger:log("AUDIO REVERSE WRAPPED", "duration=" .. debugLogger:safeField(duration)
-          .. " chunkCount=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount))
-      end
-      local okChunk, chunkErr = seekAndPlayReverseChunk(nextSrc, nextPosition, 0)
-      if not okChunk then
-        debugLogger:log("AUDIO REVERSE CHUNK FAILED", "position=" .. debugLogger:safeField(nextPosition)
-          .. " error=" .. debugLogger:safeField(chunkErr))
-        glitchCityHandoff.audioActive = false
-        return
-      end
-      glitchCityHandoff.audioReversePosition = nextPosition
-      glitchCityHandoff.audioReverseCrossfadeElapsed = 0
-      glitchCityHandoff.audioReverseCrossfading = true
-      glitchCityHandoff.audioReverseChunkCount =
-        glitchCityHandoff.audioReverseChunkCount + 1
-    end
-
-    if glitchCityHandoff.audioReverseCrossfading then
-      glitchCityHandoff.audioReverseCrossfadeElapsed =
-        glitchCityHandoff.audioReverseCrossfadeElapsed + delta
-      local t = math.min(1,
-        glitchCityHandoff.audioReverseCrossfadeElapsed / crossfade)
-      local volume = glitchCityHandoff.audioOriginalVolume or 1
-      pcall(src.setVolume, src, volume * (1 - t))
-      pcall(nextSrc.setVolume, nextSrc, volume * t)
-      if t >= 1 then
-        pcall(src.stop, src)
-        glitchCityHandoff.audioReverseSource = nextSrc
-        glitchCityHandoff.audioReverseNextSource = src
-        glitchCityHandoff.audioReverseElapsed = 0
-        glitchCityHandoff.audioReverseCrossfadeElapsed = 0
-        glitchCityHandoff.audioReverseCrossfading = false
-        if glitchCityHandoff.audioReverseChunkCount % 25 == 0 then
-          debugLogger:log("AUDIO REVERSE PROGRESS",
-            "position=" .. debugLogger:safeField(glitchCityHandoff.audioReversePosition)
-            .. " chunks=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount)
-            .. " crossfades=" .. debugLogger:safeField(glitchCityHandoff.audioReverseChunkCount - 1))
-        end
-      end
+    local okPlaying, playing = pcall(src.isPlaying, src)
+    if okPlaying and not playing then
+      pcall(src.play, src)
     end
   end
 
@@ -2498,6 +2842,68 @@ return function(mod)
   CrashRecoveryScreen.__index = CrashRecoveryScreen
   CrashRecoveryScreen.isOpaque = false
 
+  CrashRecoveryScreen.ReturnFadeScreen = {}
+  CrashRecoveryScreen.ReturnFadeScreen.__index =
+    CrashRecoveryScreen.ReturnFadeScreen
+  CrashRecoveryScreen.ReturnFadeScreen.isOpaque = false
+
+  function CrashRecoveryScreen.ReturnFadeScreen.new(game_, frames)
+    return setmetatable({
+      game = game_,
+      frame = 0,
+      frames = math.max(1, tonumber(frames) or 60),
+      holdFrames = 3,
+    }, CrashRecoveryScreen.ReturnFadeScreen)
+  end
+
+  function CrashRecoveryScreen.ReturnFadeScreen:update(_dt)
+    self.frame = self.frame + 1
+    if self.frame >= self.holdFrames + self.frames
+       and self.game.stack:top() == self then
+      self.game.stack:pop()
+    end
+  end
+
+  function CrashRecoveryScreen.ReturnFadeScreen:draw()
+    local fadeFrame = math.max(0, self.frame - self.holdFrames)
+    local alpha = math.max(0, 1 - (fadeFrame / self.frames))
+    local renderer = self.game and self.game.renderer
+    if renderer then
+      -- Renderer.screenVeil covers the final desktop composite, including
+      -- scaling and letterbox edges, not only the 160x144 game canvas.
+      renderer.screenVeil = { 0, alpha }
+      return
+    end
+    love.graphics.setColor(0, 0, 0, alpha)
+    -- Overscan well beyond the virtual Game Boy canvas. This also covers
+    -- scaling/letterbox edge pixels on the desktop renderer.
+    love.graphics.rectangle("fill", -2048, -2048, 4096, 4096)
+    love.graphics.setColor(1, 1, 1, 1)
+  end
+
+  function CrashRecoveryScreen.synthesizedHangSource(frequency)
+    if not (love.sound and love.sound.newSoundData
+       and love.audio and love.audio.newSource) then
+      return nil
+    end
+
+    -- Runtime-generated square wave: no recorded or extracted audio ships.
+    local sampleRate, sampleCount = 22050, 2205
+    frequency = math.max(220, math.min(880, tonumber(frequency) or 440))
+    local ok, source = pcall(function()
+      local data = love.sound.newSoundData(sampleCount, sampleRate, 16, 1)
+      for sample = 0, sampleCount - 1 do
+        local cycle = (sample * frequency / sampleRate) % 1
+        data:setSample(sample, cycle < 0.5 and 0.22 or -0.22)
+      end
+      local generated = love.audio.newSource(data, "static")
+      generated:setLooping(true)
+      generated:setVolume(0.45)
+      return generated
+    end)
+    return ok and source or nil
+  end
+
   function CrashRecoveryScreen.new(game_, opts)
     local self = setmetatable({}, CrashRecoveryScreen)
     self.game = game_
@@ -2509,21 +2915,119 @@ return function(mod)
     self.messageShown = false
     self.finished = false
     self.hangSource = nil
+    self.corruptionCanvas = nil
+    self.battleClosedUnderBlack = false
+    self.corruptionPattern = { strips = {}, blocks = {}, seams = {} }
 
-    local ok, source = pcall(
-      love.audio.newSource,
-      self.opts.hangTonePath,
-      "static"
-    )
-    if ok and source then
-      source:setLooping(true)
-      source:setVolume(0.55)
-      self.hangSource = source
-    else
-      mod.log:error("Could not create crash hang tone: %s", tostring(source))
+    if self.opts.retiredFailure then
+      local stripCount = math.random(4, 7)
+      for _ = 1, stripCount do
+        local direction = math.random(0, 1) == 0 and -1 or 1
+        self.corruptionPattern.strips[#self.corruptionPattern.strips + 1] = {
+          math.random(7, 132), math.random(3, 9),
+          direction * (math.random(1, 4) * 8),
+        }
+      end
+      local blockCount = math.random(2, 5)
+      for _ = 1, blockCount do
+        self.corruptionPattern.blocks[#self.corruptionPattern.blocks + 1] = {
+          math.random(4, 128), math.random(12, 120),
+          math.random(1, 4) * 8, math.random(1, 3) * 8,
+          (math.random(-6, 6) * 8), (math.random(-2, 2) * 8),
+        }
+      end
+      local seamCount = math.random(2, 4)
+      for _ = 1, seamCount do
+        self.corruptionPattern.seams[#self.corruptionPattern.seams + 1] = {
+          math.random(2, 118), math.random(10, 132), math.random(20, 55),
+        }
+      end
+    end
+
+    if type(self.opts.hangTonePath) == "string" then
+      local ok, source = pcall(
+        love.audio.newSource,
+        self.opts.hangTonePath,
+        "static"
+      )
+      if ok and source then
+        source:setLooping(true)
+        source:setVolume(0.55)
+        self.hangSource = source
+      else
+        mod.log:error("Could not create crash hang tone: %s", tostring(source))
+      end
+    end
+
+    if not self.hangSource and self.opts.synthesizeHangTone then
+      self.hangSource = CrashRecoveryScreen.synthesizedHangSource(
+        self.opts.hangFrequency)
     end
 
     return self
+  end
+
+  function CrashRecoveryScreen:captureBattleFrame()
+    if self.corruptionCanvas or not self.battle then
+      return self.corruptionCanvas
+    end
+    if not (love.graphics and love.graphics.newCanvas) then return nil end
+
+    local previous = love.graphics.getCanvas and love.graphics.getCanvas() or nil
+    local canvas
+    local pushed = false
+    local ok, err = pcall(function()
+      canvas = love.graphics.newCanvas(160, 144)
+      canvas:setFilter("nearest", "nearest")
+      love.graphics.push("all")
+      pushed = true
+      love.graphics.setCanvas(canvas)
+      love.graphics.clear(1, 1, 1, 1)
+      self.battle:draw()
+    end)
+
+    pcall(love.graphics.setCanvas, previous)
+    if pushed then pcall(love.graphics.pop) end
+
+    if not ok then
+      mod.log:error("Could not freeze retired crash battle frame: %s",
+        tostring(err))
+      return nil
+    end
+    self.corruptionCanvas = canvas
+    return canvas
+  end
+
+  function CrashRecoveryScreen:drawFrozenBattleCorruption()
+    local canvas = self:captureBattleFrame()
+    if not canvas then return end
+
+    -- Start with the exact frozen battle frame, then roll only selected
+    -- strips and blocks. Most pixels remain untouched, creating the familiar
+    -- cartridge-bump tear instead of flashing unrelated glitch artwork.
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(canvas, 0, 0)
+
+    for _, strip in ipairs(self.corruptionPattern.strips or {}) do
+      local y, height, dx = strip[1], strip[2], strip[3]
+      love.graphics.setScissor(0, y, 160, height)
+      love.graphics.draw(canvas, dx, 0)
+      love.graphics.draw(canvas, dx > 0 and dx - 160 or dx + 160, 0)
+    end
+
+    for _, block in ipairs(self.corruptionPattern.blocks or {}) do
+      love.graphics.setScissor(block[1], block[2], block[3], block[4])
+      love.graphics.draw(canvas, block[5], block[6])
+    end
+    love.graphics.setScissor()
+
+    -- A few short frozen bus-error seams reinforce the Game Boy look without
+    -- replacing or obscuring the whole battle screen.
+    love.graphics.setColor(0, 0, 0, 1)
+    for _, seam in ipairs(self.corruptionPattern.seams or {}) do
+      love.graphics.rectangle("fill", seam[1], seam[2], seam[3], 1)
+    end
+    love.graphics.setColor(1, 1, 1, 1)
   end
 
   function CrashRecoveryScreen:startHang()
@@ -2584,6 +3088,102 @@ return function(mod)
     end
   end
 
+  function CrashRecoveryScreen:closeRetiredBattleUnderBlack()
+    if self.battleClosedUnderBlack then return true end
+    Sound.stopLoop("Low_Health_Alarm")
+
+    local stack = self.game.stack
+    local battle = self.battle
+    local states = stack and stack.states or {}
+    local beforeCount = #states
+
+    -- The debug shortcut intentionally clears activeWorld while the scripted
+    -- battle is being queued. Preserve and restore the exact pre-battle stack
+    -- instead of trying to rediscover the overworld after that pointer has
+    -- been cleared. Some public builds also remove the native BattleState
+    -- before this controller runs; the saved stack is valid in either case.
+    local returnStates = self.opts.returnStates or {}
+    local returnWorld = self.opts.returnWorld
+    if not returnWorld or #returnStates == 0
+       or returnStates[#returnStates] ~= returnWorld then
+      debugLogger:log("RETIRED BATTLE TEARDOWN FAILED",
+        "reason=return_snapshot_missing special="
+          .. debugLogger:safeField(self.opts.special)
+          .. " stackBefore=" .. debugLogger:safeField(beforeCount))
+      return false
+    end
+
+    local retained = {}
+    for _, state in ipairs(returnStates) do retained[state] = true end
+
+    local removed = 0
+    local battleExited = false
+    while stack:top() and not retained[stack:top()] do
+      local removedState = stack:pop()
+      removed = removed + 1
+      if removedState == battle then battleExited = true end
+    end
+
+    -- What remains must be an exact prefix of the protected snapshot. If the
+    -- engine has already detached it, append the missing references without
+    -- calling enter() a second time; this is the same live overworld object,
+    -- not a newly constructed map.
+    local prefixValid = #states <= #returnStates
+    if prefixValid then
+      for index = 1, #states do
+        if states[index] ~= returnStates[index] then
+          prefixValid = false
+          break
+        end
+      end
+    end
+    if not prefixValid then
+      debugLogger:log("RETIRED BATTLE TEARDOWN FAILED",
+        "reason=return_snapshot_conflict special="
+          .. debugLogger:safeField(self.opts.special)
+          .. " stackBefore=" .. debugLogger:safeField(beforeCount)
+          .. " stackAfterUnwind=" .. debugLogger:safeField(#states))
+      return false
+    end
+    for index = #states + 1, #returnStates do
+      table.insert(states, returnStates[index])
+    end
+
+    -- If this public build had already detached the BattleState, release its
+    -- private resources explicitly. Never call BattleState:finish() here: it
+    -- pops whichever state happens to be on top and was the source of the
+    -- visible-battle/black-screen regressions.
+    if battle and not battleExited and type(battle.exit) == "function" then
+      pcall(battle.exit, battle)
+    end
+    if battle and not self.battleFinishDispatched then
+      self.battleFinishDispatched = true
+      battle.result = "run"
+      require("src.mods.Runtime").emit(
+        "battle.ended", { battle = battle, result = "run" })
+      if battle.onFinish then pcall(battle.onFinish, "run") end
+    end
+
+    activeWorld = returnWorld
+    local overworldReady = stack:top() == returnWorld
+    self.battleClosedUnderBlack = overworldReady
+    self.battle = nil
+    if overworldReady then stack:push(self) end
+    Music.stop()
+    debugLogger:log(
+      overworldReady and "RETIRED BATTLE TEARDOWN VERIFIED"
+        or "RETIRED BATTLE TEARDOWN FAILED",
+      "special=" .. debugLogger:safeField(self.opts.special)
+        .. " snapshotStates=" .. debugLogger:safeField(#returnStates)
+        .. " statesRestored=" .. debugLogger:safeField(#states)
+        .. " removed=" .. debugLogger:safeField(removed)
+        .. " battleExited=" .. debugLogger:safeField(battleExited)
+        .. " stackBefore=" .. debugLogger:safeField(beforeCount)
+        .. " overworldReady=" .. debugLogger:safeField(overworldReady)
+        .. " inputBlocked=true")
+    return overworldReady
+  end
+
   function CrashRecoveryScreen:update(_dt)
     if self.finished or self.messageShown then return end
 
@@ -2597,6 +3197,41 @@ return function(mod)
     end
 
     self.frame = self.frame + 1
+
+    if self.opts.retiredFailure then
+      local battleFrames = self.opts.battleFrames or 150
+      local corruptionFrames = self.opts.corruptionFrames or 120
+      local blackFrames = self.opts.blackFrames or 600
+
+      if self.phase == "battle" and self.frame >= battleFrames then
+        self:startHang()
+      elseif self.phase == "hang" and self.frame >= corruptionFrames then
+        -- Cartridge-style hard cut: no fade between the frozen corrupted
+        -- battle and full black. The sustained note deliberately continues
+        -- through the randomized black interval.
+        self.phase = "black"
+        self.frame = 0
+        self:closeRetiredBattleUnderBlack()
+      elseif self.phase == "black" and self.frame >= blackFrames then
+        -- Fail closed: never reveal a battle or unknown stack state. A later
+        -- frame may retry teardown, but only verified overworld state fades in.
+        if not self.battleClosedUnderBlack then
+          self:closeRetiredBattleUnderBlack()
+          return
+        end
+        if self.hangSource then pcall(self.hangSource.stop, self.hangSource) end
+        self.phase = "return_fade"
+        self.frame = 0
+        Music.restoreMap(self.game.data)
+      elseif self.phase == "return_fade" then
+        local returnFadeFrames = self.opts.returnFadeFrames or 60
+        if self.frame >= returnFadeFrames then
+          self.finished = true
+          if self.game.stack:top() == self then self.game.stack:pop() end
+        end
+      end
+      return
+    end
 
     local battleFrames = self.opts.battleFrames or 150
     local hangFrames = self.opts.hangFrames or 75
@@ -2637,6 +3272,38 @@ return function(mod)
   end
 
   function CrashRecoveryScreen:draw()
+    if self.opts.retiredFailure then
+      if self.phase == "battle" then
+        -- The random retained species supplies only the moving sprite. Its
+        -- identity and status are deliberately never presented.
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.rectangle("fill", 0, 0, 104, 40)
+      elseif self.phase == "hang" then
+        self:drawFrozenBattleCorruption()
+      elseif self.phase == "black" then
+        local renderer = self.game and self.game.renderer
+        if renderer then
+          renderer.screenVeil = { 0, 1 }
+          return
+        end
+        love.graphics.setColor(0, 0, 0, 1)
+        love.graphics.rectangle("fill", -2048, -2048, 4096, 4096)
+        love.graphics.setColor(1, 1, 1, 1)
+      elseif self.phase == "return_fade" then
+        local frames = self.opts.returnFadeFrames or 60
+        local alpha = math.max(0, 1 - (self.frame / frames))
+        local renderer = self.game and self.game.renderer
+        if renderer then
+          renderer.screenVeil = { 0, alpha }
+          return
+        end
+        love.graphics.setColor(0, 0, 0, alpha)
+        love.graphics.rectangle("fill", -2048, -2048, 4096, 4096)
+        love.graphics.setColor(1, 1, 1, 1)
+      end
+      return
+    end
+
     if self.opts.junkLines
        and (self.phase == "hang" or self.phase == "fade") then
       love.graphics.setColor(1, 1, 1, 1)
@@ -2720,8 +3387,9 @@ return function(mod)
 
     self.game.stack:push(CrashRecoveryScreen.new(self.game, {
       battle = self.battle,
-      hangTonePath = mod.assets:path(
-        "assets/audio/music_hang_note.wav"),
+      -- Captured audio is never distributed. This phase remains silent until
+      -- its channel state can be synthesized from the player-owned cache.
+      hangTonePath = nil,
       battleFrames = 30,
       hangFrames = 180,
       fadeFrames = 90,
@@ -3189,7 +3857,12 @@ return function(mod)
   -- to Trainer-Fly's debug value and provides intentional A-to-edit behavior
   -- plus accelerating held input.
 
-  local QUICK_WARP_FILE = "trainer_fly/quick_warp_v1.dat"
+  -- Gen1Recomp's current compatibility filesystem is already rooted inside
+  -- mod_compat/trainer_fly. The historical trainer_fly/ prefix therefore
+  -- points one directory too deep and no longer survives a reload. Keep the
+  -- legacy name read-only for migration from older engine layouts.
+  local QUICK_WARP_FILE = "quick_warp_v1.dat"
+  local QUICK_WARP_LEGACY_FILE = "trainer_fly/quick_warp_v1.dat"
 
   -- Curated from the actual Red/Blue/Yellow extracted map warp tables. Each
   -- exterior landing is one cell below its destination door and faces up, so
@@ -3201,14 +3874,43 @@ return function(mod)
     { label = "PC - PEWTER", mapId = "PEWTER_CITY", x = 13, y = 26 },
     { label = "PC - MT MOON", mapId = "ROUTE_4", x = 11, y = 6 },
     { label = "PC - CERULEAN", mapId = "CERULEAN_CITY", x = 19, y = 18 },
+    { label = "PC - VERMILION", mapId = "VERMILION_CITY", x = 11, y = 4 },
     { label = "PC - ROCK TUNNEL", mapId = "ROUTE_10", x = 11, y = 20 },
     { label = "PC - LAVENDER", mapId = "LAVENDER_TOWN", x = 3, y = 6 },
-    { label = "PC - VERMILION", mapId = "VERMILION_CITY", x = 11, y = 4 },
     { label = "PC - CELADON", mapId = "CELADON_CITY", x = 41, y = 10 },
     { label = "PC - FUCHSIA", mapId = "FUCHSIA_CITY", x = 19, y = 28 },
     { label = "PC - SAFFRON", mapId = "SAFFRON_CITY", x = 9, y = 30 },
     { label = "PC - CINNABAR", mapId = "CINNABAR_ISLAND", x = 11, y = 12 },
     { label = "INDIGO PLATEAU", mapId = "INDIGO_PLATEAU", x = 9, y = 6 },
+
+    -- Complete numbered-route catalog. Each landing is a recognizable,
+    -- walkable, non-warp, non-NPC route cell validated against Red, Blue,
+    -- and Yellow's extracted maps and tileset collision definitions.
+    { label = "ROUTE 1", mapId = "ROUTE_1", x = 10, y = 18 },
+    { label = "ROUTE 2", mapId = "ROUTE_2", x = 10, y = 13 },
+    { label = "ROUTE 3", mapId = "ROUTE_3", x = 35, y = 9 },
+    { label = "ROUTE 4", mapId = "ROUTE_4", x = 45, y = 10 },
+    { label = "ROUTE 5", mapId = "ROUTE_5", x = 10, y = 17 },
+    { label = "ROUTE 6", mapId = "ROUTE_6", x = 10, y = 18 },
+    { label = "ROUTE 7", mapId = "ROUTE_7", x = 10, y = 9 },
+    { label = "ROUTE 8", mapId = "ROUTE_8", x = 30, y = 9 },
+    { label = "ROUTE 9", mapId = "ROUTE_9", x = 29, y = 9 },
+    { label = "ROUTE 10", mapId = "ROUTE_10", x = 14, y = 36 },
+    { label = "ROUTE 11", mapId = "ROUTE_11", x = 30, y = 9 },
+    { label = "ROUTE 12", mapId = "ROUTE_12", x = 10, y = 53 },
+    { label = "ROUTE 13", mapId = "ROUTE_13", x = 29, y = 9 },
+    { label = "ROUTE 14", mapId = "ROUTE_14", x = 9, y = 27 },
+    { label = "ROUTE 15", mapId = "ROUTE_15", x = 30, y = 9 },
+    { label = "ROUTE 16", mapId = "ROUTE_16", x = 20, y = 12 },
+    { label = "ROUTE 17", mapId = "ROUTE_17", x = 9, y = 72 },
+    { label = "ROUTE 18", mapId = "ROUTE_18", x = 25, y = 9 },
+    { label = "ROUTE 19", mapId = "ROUTE_19", x = 10, y = 9 },
+    { label = "ROUTE 20", mapId = "ROUTE_20", x = 50, y = 9 },
+    { label = "ROUTE 21", mapId = "ROUTE_21", x = 14, y = 57 },
+    { label = "ROUTE 22", mapId = "ROUTE_22", x = 20, y = 9 },
+    { label = "ROUTE 23", mapId = "ROUTE_23", x = 10, y = 71 },
+    { label = "ROUTE 24", mapId = "ROUTE_24", x = 10, y = 18 },
+    { label = "ROUTE 25", mapId = "ROUTE_25", x = 30, y = 9 },
 
     { label = "OAK'S LAB", mapId = "PALLET_TOWN", x = 12, y = 12 },
     { label = "BILL'S HOUSE", mapId = "ROUTE_25", x = 45, y = 4 },
@@ -3219,6 +3921,12 @@ return function(mod)
     { label = "POWER PLANT", mapId = "ROUTE_10", x = 6, y = 40 },
     { label = "POKEMON MANSION", mapId = "CINNABAR_ISLAND", x = 6, y = 4 },
     { label = "CINNABAR LAB", mapId = "CINNABAR_ISLAND", x = 6, y = 10 },
+    { label = "PIKABLU - TRADE", mapId = "CINNABAR_LAB_TRADE_ROOM",
+      x = 1, y = 5, facing = "up" },
+    { label = "PIKABLU - BILL PC", mapId = "BILLS_HOUSE",
+      x = 1, y = 5, facing = "up" },
+    { label = "PIKABLU - GARDEN", mapId = "G1GPP_BILLS_GARDEN",
+      x = 8, y = 10, facing = "up" },
     { label = "CERULEAN CAVE", mapId = "CERULEAN_CITY", x = 4, y = 12 },
     { label = "DAY CARE", mapId = "ROUTE_5", x = 10, y = 22 },
     { label = "ROCKET HIDEOUT", mapId = "GAME_CORNER", x = 17, y = 5 },
@@ -3230,6 +3938,13 @@ return function(mod)
     { label = "SEAFOAM - EAST", mapId = "ROUTE_20", x = 58, y = 10 },
     { label = "DIGLETT - ROUTE 2", mapId = "DIGLETTS_CAVE_ROUTE_2", x = 4, y = 5 },
     { label = "DIGLETT - ROUTE 11", mapId = "DIGLETTS_CAVE_ROUTE_11", x = 4, y = 5 },
+    -- Exterior city-side approaches, one step east of each gatehouse warp.
+    -- Holding LEFT walks through the building entrance and keeps the same
+    -- input held when the interior guarded column triggers.
+    { label = "CYCLING RD - NORTH", mapId = "ROUTE_16",
+      x = 25, y = 10, facing = "left" },
+    { label = "CYCLING RD - SOUTH", mapId = "ROUTE_18",
+      x = 41, y = 8, facing = "left" },
 
     { label = "GYM - PEWTER", mapId = "PEWTER_CITY", x = 16, y = 18 },
     { label = "GYM - CERULEAN", mapId = "CERULEAN_CITY", x = 30, y = 20 },
@@ -3249,8 +3964,7 @@ return function(mod)
   end
 
   local function saveQuickWarpFile(point)
-    local ok = pcall(function()
-      love.filesystem.createDirectory("trainer_fly")
+    local ok, err = pcall(function()
       local payload = table.concat({
         "version=1",
         "map=" .. tostring(point.mapId),
@@ -3260,12 +3974,17 @@ return function(mod)
       }, "\n")
       assert(love.filesystem.write(QUICK_WARP_FILE, payload))
     end)
+    debugLogger:log("QUICK WARP STORAGE SAVE",
+      "path=" .. QUICK_WARP_FILE
+        .. " success=" .. debugLogger:safeField(ok)
+        .. " error=" .. debugLogger:safeField(err)
+        .. " map=" .. debugLogger:safeField(point and point.mapId))
     return ok
   end
 
-  local function loadQuickWarpFile()
-    if not love.filesystem.getInfo(QUICK_WARP_FILE) then return nil end
-    local ok, payload = pcall(love.filesystem.read, QUICK_WARP_FILE)
+  local function loadQuickWarpPath(path)
+    if not love.filesystem.getInfo(path) then return nil end
+    local ok, payload = pcall(love.filesystem.read, path)
     if not ok or type(payload) ~= "string" then return nil end
     local fields = {}
     for line in payload:gmatch("[^\r\n]+") do
@@ -3280,6 +3999,23 @@ return function(mod)
       facing = fields.facing,
     }
     if point.version ~= 1 or not validateQuickWarp(point) then return nil end
+    return point
+  end
+
+  local function loadQuickWarpFile()
+    local point = loadQuickWarpPath(QUICK_WARP_FILE)
+    local source = point and QUICK_WARP_FILE or nil
+    if not point then
+      point = loadQuickWarpPath(QUICK_WARP_LEGACY_FILE)
+      source = point and QUICK_WARP_LEGACY_FILE or nil
+      if point then saveQuickWarpFile(point) end
+    end
+    debugLogger:log("QUICK WARP STORAGE LOAD",
+      "path=" .. debugLogger:safeField(source or QUICK_WARP_FILE)
+        .. " ready=" .. debugLogger:safeField(point ~= nil)
+        .. " migrated=" .. debugLogger:safeField(
+          source == QUICK_WARP_LEGACY_FILE)
+        .. " map=" .. debugLogger:safeField(point and point.mapId))
     return point
   end
 
@@ -3340,8 +4076,23 @@ return function(mod)
       return false
     end
 
-    escape = nil
-    intermediaryBattle = nil
+    -- Quick Warp is a development navigation aid, not a battle. On an armed
+    -- Trainer-Fly sequence, preserve the interrupted approach and its current
+    -- volatile Special/Attack selection exactly as a normal field traversal
+    -- would. Outside that lifecycle, retain the original cleanup behavior.
+    local preserveTrainerFly = escape and escape.teleported == true
+    if preserveTrainerFly then
+      debugLogger:log("QUICK WARP TRAINER-FLY PRESERVED",
+        "originMap=" .. debugLogger:safeField(escape.originMap)
+          .. " destinationMap=" .. debugLogger:safeField(point.mapId)
+          .. " qualified=" .. debugLogger:safeField(escape.qualified == true)
+          .. " special=" .. debugLogger:safeField(escape.special)
+          .. " attackMod=" .. debugLogger:safeField(escape.attackModifier)
+          .. " startSuppressed=true")
+    else
+      escape = nil
+    end
+    enemyMemory:abandonBattle()
     forceMenuPending = false
     forcedMenu = nil
     world.emote = nil
@@ -3353,11 +4104,18 @@ return function(mod)
 
     local ok = pcall(function()
       world:setMap(point.mapId, math.floor(point.x), math.floor(point.y),
-        point.facing, { via = "trainer_fly_quick_warp" })
+        point.facing, { via = "g1gpp_quick_warp" })
     end)
     if not ok then
       game.stack:push(TextBox.new(game, "WARP POINT IS\nNO LONGER VALID."))
       return false
+    end
+    if preserveTrainerFly then
+      escape.world = world
+      debugLogger:log("QUICK WARP TRAINER-FLY COMMITTED",
+        "destinationMap=" .. debugLogger:safeField(point.mapId)
+          .. " originMap=" .. debugLogger:safeField(escape.originMap)
+          .. " pending=true startSuppressed=true")
     end
     return true
   end
@@ -3423,7 +4181,7 @@ return function(mod)
     end
     warpAnywherePending = nil
     escape = nil
-    intermediaryBattle = nil
+    enemyMemory:abandonBattle()
     forceMenuPending = false
     forcedMenu = nil
     world.emote = nil
@@ -3436,7 +4194,7 @@ return function(mod)
     Sound.play(game.data, "Teleport_Exit1")
     local ok, warpError = pcall(function()
       world:setMap(point.mapId, math.floor(point.x), math.floor(point.y),
-        point.facing, { via = "trainer_fly_warp_anywhere" })
+        point.facing, { via = "g1gpp_warp_anywhere" })
     end)
     if not ok then
       debugLogger:log("WARP ANYWHERE FAILED",
@@ -3489,12 +4247,14 @@ return function(mod)
     -- wide, so the row uses the recognizable project acronym; it opens this
     -- mod's option rows directly and B returns to the overworld.
     -- SAVE immediately follows the Trainer-name row in the native menu.
-    mod.ui.insertBefore(items, "SAVE", {
-      label = "G1GPP",
-      onSelect = function()
-        ManagerState.G1.open(game_)
-      end,
-    })
+    if mod._g1gppDevelopmentTools then
+      mod.ui.insertBefore(items, "SAVE", {
+        label = "G1GPP",
+        onSelect = function()
+          ManagerState.G1.open(game_)
+        end,
+      })
+    end
 
     if glitchCityHandoff.active then
       for _, item in ipairs(items or {}) do
@@ -3507,7 +4267,7 @@ return function(mod)
       end
     end
 
-    if validateQuickWarp(quickWarpPoint) then
+    if mod._g1gppDevelopmentTools and validateQuickWarp(quickWarpPoint) then
       mod.ui.insertBefore(items, "QUIT", {
         label = "WARP POINT",
         onSelect = function()
@@ -3648,6 +4408,18 @@ return function(mod)
     love.graphics.setColor(1, 1, 1, 1)
   end
 
+  local GlitchDexViewer
+  if mod._g1gppDevelopmentTools then
+    GlitchDexViewer = assert(love.filesystem.load(
+      mod.path .. "/modules/glitch_pokedex_viewer.lua"))()({
+        DexEntryMenu = DexEntryMenu,
+        EncounterData = EncounterData,
+        Font = Font,
+        logger = debugLogger,
+        PokedexAnomalyController = PokedexAnomalyController,
+      })
+  end
+
   -- Patch only Trainer-Fly's SPECIAL VALUE row. Other mods and number options
   -- keep the engine's stock behavior.
   ManagerState.__trainerFlyOriginalBuildOptionRows =
@@ -3678,7 +4450,76 @@ return function(mod)
 
     for _, row in ipairs(rows) do
       row._g1gppMarquee = true
-      if row.id == "debug_start_battle" then
+      if row.id == "debug_memory_special" then
+        -- Live editor for the volatile enemy Special byte. This deliberately
+        -- bypasses persisted option storage: a new game boot/load clears it,
+        -- and the next ordinary battle overwrites it exactly like battle WRAM.
+        row.step = nil
+        row.value = function()
+          return string.format("%03d", enemyMemory:getSpecial())
+        end
+        row.activate = function()
+          manager.game.stack:push(SpecialValueEditor.new(manager.game, {
+            start = enemyMemory:getSpecial() or 0,
+            minimum = 0,
+            maximum = 255,
+            onDone = function(value)
+              if value == nil then return end
+              local special = enemyMemory:setSpecial(value, "DEBUG_SET")
+              if escape and escape.teleported and escape.qualified then
+                escape.special = special
+                escape.attackModifier = enemyMemory:getAttackModifier()
+                escape.lastEnemySpecies = enemyMemory:getSpecies()
+                escape.resolvedEncounter =
+                  EncounterData.resolve(special, pokemonByIndex)
+              end
+              debugLogger:log("VOLATILE ENEMY MEMORY MANUALLY SET",
+                "special=" .. debugLogger:safeField(special)
+                  .. " attackMod=" .. debugLogger:safeField(
+                    enemyMemory:getAttackModifier())
+                  .. " pendingSelectionUpdated=" .. debugLogger:safeField(
+                    escape and escape.teleported and escape.qualified or false)
+                  .. " persisted=false nextBattleOverwrites=true")
+            end,
+          }))
+        end
+      elseif row.id == "debug_memory_attack_modifier" then
+        -- Live editor for the volatile enemy Attack-modifier byte. Zero is the
+        -- authentic cleared boot value; manual battle testing uses 1-13, with
+        -- 7 representing an unmodified Attack stage.
+        row.step = nil
+        row.value = function()
+          return string.format("%02d", enemyMemory:getAttackModifier() or 0)
+        end
+        row.activate = function()
+          manager.game.stack:push(SpecialValueEditor.new(manager.game, {
+            start = enemyMemory:isAttackModifierValid()
+              and enemyMemory:getAttackModifier() or 7,
+            minimum = 1,
+            maximum = 13,
+            onDone = function(value)
+              if value == nil then return end
+              local attackModifier = enemyMemory:setAttackModifier(value)
+              if escape and escape.teleported and escape.qualified then
+                escape.attackModifier = attackModifier
+              end
+              debugLogger:log("VOLATILE ENEMY ATTACK MEMORY MANUALLY SET",
+                "attackMod=" .. debugLogger:safeField(attackModifier)
+                  .. " pendingSelectionUpdated=" .. debugLogger:safeField(
+                    escape and escape.teleported and escape.qualified or false)
+                  .. " persisted=false nextBattleOverwrites=true")
+            end,
+          }))
+        end
+      elseif row.id == "debug_wild_encounter_species" then
+        wildEncounterOverride:decorateRow(row, manager)
+      elseif row.id == "debug_player_name" then
+        wildEncounterOverride.oldManGlitch:decorateDebugRow(row, manager)
+      elseif row.id == "debug_arm_old_man" then
+        wildEncounterOverride.oldManGlitch:decorateArmDebugRow(row, manager)
+      elseif row.id == "debug_start_surfing" then
+        wildEncounterOverride.debugSurf:decorateRow(row, manager)
+      elseif row.id == "debug_start_battle" then
         -- Action row: queue a direct Trainer-Fly result using the currently
         -- selected Special ID and Attack Modifier. The battle begins only
         -- after the Mods screen has closed and the overworld is safely idle.
@@ -3687,10 +4528,73 @@ return function(mod)
           return debugTestBattlePending and "QUEUED" or "START"
         end
         row.activate = function()
+          if not enemyMemory:isAttackModifierValid() then
+            debugLogger:log("DIRECT TEST BATTLE BLOCKED",
+              "reason=memory_attack_mod_cleared attackMod="
+                .. debugLogger:safeField(enemyMemory:getAttackModifier()))
+            manager.game.stack:push(TextBox.new(manager.game,
+              "SET MEMORY ATTACK\nMOD TO 1-13 FIRST."))
+            return
+          end
           debugGlitchCityPending = false
+          debugPokemonBattlePending = false
           debugTestBattlePending = true
           mod.log:info("G1GPP direct test battle queued")
           debugLogger:log("DIRECT TEST BATTLE QUEUED", playerStateSummary(activeWorld))
+        end
+      elseif row.id == "debug_start_pokemon_battle" then
+        -- Development-only roster test. Unlike START TEST BATTLE, this bypasses
+        -- the authentic Special 200-255 Trainer interpretation and directly
+        -- starts a retained glitch-Pokemon record or the bounded failure for a
+        -- retired crash-only ID. Production encounter rules are not changed.
+        row.step = nil
+        row.value = function()
+          return debugPokemonBattlePending and "QUEUED" or "START"
+        end
+        row.activate = function()
+          local selected = enemyMemory:getSpecial()
+          local retained = EncounterData.glitchPokemon[selected]
+          local retiredFailure = EncounterData.crashEffects[selected]
+          if not retained and not (retiredFailure
+              and retiredFailure.retiredSpecies == true) then
+            debugLogger:log("DIRECT POKEMON TEST BLOCKED",
+              "special=" .. debugLogger:safeField(selected)
+                 .. " reason=no_retained_species_or_retired_failure")
+            manager.game.stack:push(TextBox.new(manager.game,
+              "THIS ID HAS NO RETAINED\nPOKEMON OR FAILURE RECORD."))
+            return
+          end
+          debugGlitchCityPending = false
+          debugTestBattlePending = false
+          debugPokemonBattlePending = true
+          mod.log:info("G1GPP direct Pokemon roster test queued")
+          debugLogger:log("DIRECT POKEMON TEST QUEUED",
+            "special=" .. debugLogger:safeField(selected)
+              .. " species=" .. debugLogger:safeField(retained and retained.id)
+              .. " retiredFailure=" .. debugLogger:safeField(
+                retiredFailure and retiredFailure.retiredSpecies == true)
+              .. " authenticUpperTrainerRouteBypassed=true "
+              .. playerStateSummary(activeWorld))
+        end
+      elseif row.id == "debug_glitch_pokedex_viewer" then
+        row.step = nil
+        row.value = function() return "OPEN" end
+        row.activate = function()
+          local viewer = GlitchDexViewer.new(manager.game,
+            enemyMemory:getSpecial())
+          if #viewer.items == 0 or not viewer.entry then
+            debugLogger:log("GLITCH POKEDEX VIEWER BLOCKED",
+              "reason=no_retained_entries")
+            manager.game.stack:push(TextBox.new(manager.game,
+              "NO RETAINED GLITCH\nPOKEDEX ENTRIES."))
+            return
+          end
+          manager.game.stack:push(viewer)
+          debugLogger:log("GLITCH POKEDEX VIEWER OPENED",
+            "startSpecial=" .. debugLogger:safeField(
+              viewer.items[viewer.position].special)
+              .. " entries=" .. debugLogger:safeField(#viewer.items)
+              .. " saveModified=false")
         end
       elseif row.id == "debug_start_glitch_city" then
         -- Action row: close the Mods screen normally, then activate the exact
@@ -3709,6 +4613,7 @@ return function(mod)
             return
           end
           debugTestBattlePending = false
+          debugPokemonBattlePending = false
           debugGlitchCityPending = true
           mod.log:info("G1GPP direct Glitch City activation queued")
           debugLogger:log("DIRECT GLITCH CITY QUEUED", playerStateSummary(activeWorld))
@@ -3766,6 +4671,14 @@ return function(mod)
                 .. " reason=" .. debugLogger:safeField(ok and "bag_full_or_limit" or added))
           end
         end
+      elseif row.id == "debug_add_rare_candy" then
+        ManagerState.G1.DebugInventoryTools:decorateRareCandyRow(row, manager)
+      elseif row.id == "debug_delete_inventory_item" then
+        ManagerState.G1.DebugInventoryTools:decorateDeleteRow(row, manager)
+      elseif row.id == "debug_delete_party_pokemon" then
+        ManagerState.G1.DebugInventoryTools:decoratePokemonDeleteRow(row, manager)
+      elseif row.id == "debug_reset_snake" then
+        ManagerState.G1.SnakePC.controller:decorateResetRow(row, manager)
       elseif row.id == "debug_add_tmhm_test_kit" then
         -- Development-only compatibility kit. TMs gain one copy per use;
         -- HMs are ensured present without creating duplicate key machines.
@@ -3826,6 +4739,96 @@ return function(mod)
               .. " alreadyPresent=" .. debugLogger:safeField(presentCount)
               .. " failed=" .. debugLogger:safeField(failedCount)
               .. " bagSlots=" .. debugLogger:safeField(Bag.slots(save)))
+        end
+      elseif row.id == "debug_add_test_mew" then
+        -- Development-only battle fixture mirroring the validated mGBA
+        -- research assist: Lv100 Mew, 999 HP/stats, Psychic in slot 1 with
+        -- 63 PP. It is appended only when a normal party slot is free and
+        -- does not alter any existing Pokémon or Pokédex ownership flags.
+        row.step = nil
+        row.value = function()
+          local liveGame = manager.game or (activeWorld and activeWorld.game) or game
+          local save = liveGame and liveGame.save
+          return save and save.party and (#save.party .. "/6") or "N/A"
+        end
+        row.activate = function()
+          local liveGame = manager.game or (activeWorld and activeWorld.game) or game
+          local save = liveGame and liveGame.save
+          local data = liveGame and liveGame.data
+          local mewId, psychicId = nil, nil
+          if data and data.pokemon then
+            for id, def in pairs(data.pokemon) do
+              local name = def and def.name
+              if id == "MEW" or (type(name) == "string" and name:upper() == "MEW") then
+                mewId = id
+                break
+              end
+            end
+          end
+          if data and data.moves then
+            for id, def in pairs(data.moves) do
+              local name = def and def.name
+              local upper = type(name) == "string" and name:upper() or nil
+              if id == "PSYCHIC" or id == "PSYCHIC_M" or upper == "PSYCHIC" then
+                psychicId = id
+                break
+              end
+            end
+          end
+          debugLogger:log("DEBUG TEST MEW RESOLVE",
+            "mewId=" .. debugLogger:safeField(mewId)
+              .. " psychicId=" .. debugLogger:safeField(psychicId)
+              .. " save=" .. debugLogger:safeField(save ~= nil)
+              .. " party=" .. debugLogger:safeField(save and save.party ~= nil)
+              .. " pokemonRegistry=" .. debugLogger:safeField(data and data.pokemon ~= nil)
+              .. " moveRegistry=" .. debugLogger:safeField(data and data.moves ~= nil))
+          if not (save and save.party and data and mewId and psychicId) then
+            debugLogger:log("DEBUG TEST MEW FAILED",
+              "reason=content_resolve_failed"
+                .. " managerGame=" .. debugLogger:safeField(manager.game ~= nil)
+                .. " activeWorld=" .. debugLogger:safeField(activeWorld ~= nil)
+                .. " activeWorldGame=" .. debugLogger:safeField(activeWorld and activeWorld.game ~= nil)
+                .. " fallbackGame=" .. debugLogger:safeField(game ~= nil)
+                .. " save=" .. debugLogger:safeField(save ~= nil)
+                .. " data=" .. debugLogger:safeField(data ~= nil)
+                .. " mewId=" .. debugLogger:safeField(mewId)
+                .. " psychicId=" .. debugLogger:safeField(psychicId))
+            return
+          end
+          if #save.party >= 6 then
+            debugLogger:log("DEBUG TEST MEW FAILED",
+              "reason=party_full partyCount=" .. debugLogger:safeField(#save.party))
+            if liveGame.stack then
+              liveGame.stack:push(TextBox.new(liveGame,
+                "PARTY IS FULL.\nFREE ONE SLOT FIRST."))
+            end
+            return
+          end
+          local Pokemon = require("src.pokemon.Pokemon")
+          local ok, mon = pcall(Pokemon.new, data, mewId, 100)
+          if not (ok and mon) then
+            debugLogger:log("DEBUG TEST MEW FAILED",
+              "reason=create_failed error=" .. debugLogger:safeField(mon))
+            return
+          end
+          mon.nickname = "TEST MEW"
+          mon.level = 100
+          mon.stats = { hp = 999, attack = 999, defense = 999, speed = 999, special = 999 }
+          mon.hp = 999
+          mon.status = nil
+          mon.moves = { { id = psychicId, pp = 63 } }
+          save.party[#save.party + 1] = mon
+          debugLogger:log("DEBUG TEST MEW ADDED",
+            "partySlot=" .. debugLogger:safeField(#save.party)
+              .. " level=100 hp=999 attack=999 defense=999 speed=999 special=999"
+              .. " speciesId=" .. debugLogger:safeField(mewId)
+              .. " move1=" .. debugLogger:safeField(psychicId)
+              .. " pp1=63 existingPokemonModified=false pokedexModified=false")
+          mod.log:info("G1GPP debug added Lv100 TEST MEW battle fixture")
+          if liveGame.stack then
+            liveGame.stack:push(TextBox.new(liveGame,
+              "TEST MEW ADDED.\nLV100 / 999 STATS."))
+          end
         end
       elseif row.id == "debug_cubone_seen" then
         -- One action controls the exact vanilla gate used by No.000. The
@@ -3938,47 +4941,11 @@ return function(mod)
         end
       end
 
-      local config
-      if row.id == "debug_special_value" then
-        config = {
-          key = "debug_special_value",
-          default = 21,
-          minimum = 0,
-          maximum = 255,
-        }
-      elseif row.id == "debug_attack_modifier" then
-        config = {
-          key = "debug_attack_modifier",
-          default = 7,
-          minimum = 1,
-          maximum = 13,
-        }
-      end
-
-      if config then
-        -- No left/right adjustment while merely highlighting the row.
-        row.step = nil
-        row.activate = function()
-          local current =
-            tonumber(manager:optionValue(m.id, {
-              key = config.key,
-              default = config.default,
-            })) or config.default
-
-          manager.game.stack:push(SpecialValueEditor.new(manager.game, {
-            start = current,
-            minimum = config.minimum,
-            maximum = config.maximum,
-            onDone = function(value)
-              if value ~= nil then
-                manager:setOption(m.id, config.key, value)
-              end
-            end,
-          }))
-        end
-      end
     end
 
+    if mod._g1gppDevelopmentTools and wildEncounterOverride.debugMenuGroups then
+      return wildEncounterOverride.debugMenuGroups:groupRows(rows, manager)
+    end
     return rows
   end
 
@@ -4105,57 +5072,6 @@ return function(mod)
       or mapId:find("ROUTE_24", 1, true) ~= nil
       or mapId:find("ROUTE_25", 1, true) ~= nil
     return correctClass and party == 2 and routeOkay
-  end
-
-  local function speciesOf(value)
-    if not value then return nil end
-    local mon = value.mon or value
-    local species = mon.species or mon.id
-    if type(species) == "table" then species = species.id end
-    return species and tostring(species):upper() or nil
-  end
-
-  -- The original glitch reads the live enemy Special byte left by the last
-  -- opposing battler. Prefer curStats so Transform and in-battle stat changes
-  -- are represented. Fall back to the underlying monster's calculated stats.
-  local function specialOf(value)
-    if not value then return nil end
-    local mon = value.mon or value
-    local candidates = {
-      value.curStats and value.curStats.special,
-      value.stats and value.stats.special,
-      mon.stats and mon.stats.special,
-    }
-    for _, v in ipairs(candidates) do
-      v = tonumber(v)
-      if v then return math.max(0, math.min(255, math.floor(v))) end
-    end
-    return nil
-  end
-
-  local function attackModifierOf(value)
-    if not value then return 7 end
-    local stage = value.stages and tonumber(value.stages.attack) or 0
-    stage = math.max(-6, math.min(6, math.floor(stage or 0)))
-    return stage + 7
-  end
-
-  local function captureEnemy(value)
-    if not value or value.isPlayer == true then return end
-    local special = specialOf(value)
-    if special == nil then return end
-    capturedSpecial = special
-    capturedAttackModifier = attackModifierOf(value)
-    capturedEnemySpecies = speciesOf(value)
-    mod.log:info(
-      "G1GPP captured enemy %s Special=%d AttackMod=%d",
-      tostring(capturedEnemySpecies),
-      capturedSpecial,
-      capturedAttackModifier)
-  end
-
-  local function captureCurrentEnemy(battle)
-    if battle and battle.enemy then captureEnemy(battle.enemy) end
   end
 
   local function releaseTrainerApproach(world)
@@ -4437,10 +5353,21 @@ return function(mod)
         .. " storedPixel=" .. debugLogger:safeField(origin.px) .. "," .. debugLogger:safeField(origin.py)
         .. " before=" .. playerStateSummary(world))
       local ok, err = pcall(function()
-        if not world.map or world.map.id ~= origin.mapId then
-          world:setMap(origin.mapId, targetX, targetY,
-            origin.facing or "down", { via = "g1gpp_glitch_city_recovery" })
-        end
+        -- Always perform a real map reload, even when recovery returns to the
+        -- same map. Glitch City lets NPCs walk against corrupted collision;
+        -- restoring only metatiles leaves those live NPC instances stranded
+        -- in now-solid cells. A non-seamless reload rebuilds the ordinary NPC
+        -- pool from map definitions and save flags without persisting mod
+        -- state. Music stays held until the recovery presentation releases it.
+        world:setMap(origin.mapId, targetX, targetY,
+          origin.facing or "down", {
+            via = "g1gpp_glitch_city_recovery",
+            keepMusic = true,
+          })
+        debugLogger:log("RECOVERY MAP RELOADED",
+          "map=" .. debugLogger:safeField(origin.mapId)
+          .. " npcs=" .. debugLogger:safeField(
+            world.npcs and #world.npcs or 0))
 
         local player = world.player
         if not player then error("recovery has no player object") end
@@ -4808,7 +5735,7 @@ return function(mod)
   local function derivedGlitchAtlasPath(imagePath)
     local base = type(imagePath) == "string" and imagePath:match("([^/]+)%.png$")
     if not base then return nil end
-    return "assets/generated/tilesets/g1gpp_" .. base .. ".png"
+    return "save/mod-derived/g1gpp/tilesets/g1gpp_" .. base .. ".png"
   end
 
   local function corruptRuntimeMap(world)
@@ -4829,14 +5756,12 @@ return function(mod)
     end
 
     local baseData = Assets.imageData(sourceImagePath)
-    local fontData = Assets.imageData("assets/generated/fonts/font.png")
-    local extraData = Assets.imageData("assets/generated/fonts/font_extra.png")
     local bw, bh = baseData:getDimensions()
-    local fw, fh = fontData:getDimensions()
-    local ew, eh = extraData:getDimensions()
     local baseTileCount = math.floor(bw / 8) * math.floor(bh / 8)
-    local fontTileCount = math.floor(fw / 8) * math.floor(fh / 8)
-    local extraTileCount = math.floor(ew / 8) * math.floor(eh / 8)
+    -- Gen1Recomp's imported font pages are fixed at 16x8 and 16x2 tiles.
+    -- The transform appended those pages in this exact order to every atlas.
+    local fontTileCount = 16 * 8
+    local extraTileCount = 16 * 2
     local glyphThemeCount = 4
     local glyphThemeStride = fontTileCount + extraTileCount
 
@@ -4877,7 +5802,7 @@ return function(mod)
 
     local glyphTiles, symbolGlyphTiles = {}, {}
     local calmSymbolGlyphTiles = {}
-    -- Codes verified against data/generated/font.lua. These emphasize visible
+    -- Codes verified against the imported font table. These emphasize visible
     -- UI corruption: punctuation, brackets, currency, multiplication/gender,
     -- arrows, triangles and the text-box border pieces.
     local symbolCodes = {
@@ -5341,8 +6266,16 @@ return function(mod)
 
   local function armDebugReturnIfEnabled(reason)
     if not (escape and escape.teleported and not escape.qualified) then return false end
-    local debugEnabled, debugValue, debugAttackModifier = debugSettings()
+    local debugEnabled = debugSpecialEnabled()
+    local debugValue = enemyMemory:getSpecial()
     if not debugEnabled then return false end
+    local debugAttackModifier = enemyMemory:getAttackModifier()
+    if not enemyMemory:isAttackModifierValid() then
+      debugLogger:log("DEBUG SPECIAL OVERRIDE BLOCKED",
+        "reason=memory_attack_mod_cleared attackMod="
+          .. debugLogger:safeField(debugAttackModifier))
+      return false
+    end
     escape.qualified = true
     escape.special = debugValue
     escape.attackModifier = debugAttackModifier
@@ -5660,7 +6593,7 @@ return function(mod)
     -- Direct Glitch City action. It is queued from the Mods screen and begins
     -- only after that screen has closed and the native overworld is safely idle.
     -- The only skipped stage is battle creation; runtime activation is shared.
-    if debugGlitchCityPending
+    if mod._g1gppDevelopmentTools and debugGlitchCityPending
        and game and game.stack:top() == world
        and not world.transitioning
        and not world.runner:isRunning() then
@@ -5690,16 +6623,144 @@ return function(mod)
       end
     end
 
+    -- The cartridge-authentic Safari save/reset sequence uses the gate's
+    -- missing LAST_MAP warp 5 as its trigger. The controller safely returns
+    -- the player to the captured source cell first, then hands that source
+    -- map to the same bounded Glitch City runtime used by the debug path.
+    local safariGlitchAction, safariGlitchPayload =
+      ManagerState.G1.SafariGlitchCity:poll(game, world)
+    if safariGlitchAction == "recall" then return end
+    if safariGlitchAction == "activate" then
+      if glitchCityHandoff.active then
+        debugLogger:log("SAFARI GLITCH CITY HANDOFF BLOCKED",
+          "reason=already_active " .. playerStateSummary(world))
+      else
+        escape = nil
+        glitchCityHandoff.armed = false
+        glitchCityHandoff.pending = true
+        glitchCityHandoff.idleFrames = 0
+        captureGlitchCityOrigin(world, "safari_zone_save_reset")
+        debugLogger:log("SAFARI GLITCH CITY HANDOFF",
+          "sourceMap=" .. debugLogger:safeField(
+            safariGlitchPayload and safariGlitchPayload.sourceMap)
+            .. " missingWarp5=true durationFrames="
+            .. debugLogger:safeField(glitchCityHandoff.durationFrames)
+            .. " " .. playerStateSummary(world))
+      end
+    end
+
+    -- Development-only Surf setup runs after the Mods screen closes. It uses
+    -- the engine's ordinary water, movement, animation, and music path while
+    -- supplying no badge, HM, or permanent party/save progression.
+    if mod._g1gppDevelopmentTools and wildEncounterOverride.debugSurf
+       and wildEncounterOverride.debugSurf:runIfPending(game, world) then return end
+
+    -- A Cinnabar coast roll is detected inside the public encounter hook.
+    -- Start the resolved battle on the next safely idle overworld frame. The
+    -- Name bytes are copied verbatim into the original grass encounter table.
+    -- Red/Blue then interprets values below 200 as Pokemon and values 200+
+    -- through its trainer opponent path. Preserve that split here rather than
+    -- turning name bytes such as 227 (Chief) into G1GPP failure Pokemon.
+    if wildEncounterOverride.oldManEncounterPending
+       and game and game.stack:top() == world
+       and not world.transitioning
+       and not world.runner:isRunning() then
+      local payload = wildEncounterOverride.oldManEncounterPending
+      wildEncounterOverride.oldManEncounterPending = nil
+      local special = tonumber(payload.special)
+      local resolved = payload.species and {
+        kind = "pokemon",
+        species = payload.species,
+        subtype = "old_man_retained_grass",
+      } or EncounterData.resolve(special, pokemonByIndex)
+      debugLogger:log("OLD MAN ENCOUNTER START",
+        "special=" .. debugLogger:safeField(special)
+          .. " species=" .. debugLogger:safeField(payload.species)
+          .. " level=" .. debugLogger:safeField(payload.level)
+          .. " slot=" .. debugLogger:safeField(payload.slot)
+          .. " source=" .. debugLogger:safeField(payload.source)
+          .. " " .. playerStateSummary(world))
+      escape = {
+        world = world,
+        originMap = world.map and world.map.id,
+        teleported = true,
+        qualified = true,
+        returnTriggered = true,
+        special = special,
+        attackModifier = payload.level,
+        oldManLevel = math.max(0, math.min(255,
+          math.floor(tonumber(payload.level) or 0))),
+        lastEnemySpecies = "OLD_MAN_COAST",
+        oldManEncounter = true,
+        resolvedEncounter = resolved,
+      }
+      Screens.push(game, "StartMenu")
+      forcedMenu = game.stack:top()
+      game.stack:pop()
+      return
+    end
+
+    -- Direct retained-Pokemon/failure roster test. This is intentionally
+    -- separate from START TEST BATTLE: Special 200-255 still produces glitch
+    -- Trainers everywhere outside this one development shortcut.
+    if mod._g1gppDevelopmentTools and debugPokemonBattlePending
+       and game and game.stack:top() == world
+       and not world.transitioning
+       and not world.runner:isRunning() then
+      debugPokemonBattlePending = false
+      local debugValue = enemyMemory:getSpecial()
+      local retained = EncounterData.glitchPokemon[debugValue]
+      local retiredFailure = EncounterData.crashEffects[debugValue]
+      if not retained and not (retiredFailure
+          and retiredFailure.retiredSpecies == true) then
+        debugLogger:log("DIRECT POKEMON TEST BLOCKED",
+          "phase=execution special=" .. debugLogger:safeField(debugValue)
+            .. " reason=no_retained_species_or_retired_failure")
+        return
+      end
+      captureGlitchCityOrigin(world, "direct_pokemon_test_before_battle")
+      debugLogger:log("DIRECT POKEMON TEST START",
+        "special=" .. debugLogger:safeField(debugValue)
+          .. " species=" .. debugLogger:safeField(retained and retained.id)
+          .. " retiredFailure=" .. debugLogger:safeField(
+            retiredFailure and retiredFailure.retiredSpecies == true)
+          .. " authenticUpperTrainerRouteBypassed=true "
+          .. playerStateSummary(world))
+      escape = {
+        world = world,
+        originMap = world.map and world.map.id,
+        teleported = true,
+        qualified = true,
+        returnTriggered = true,
+        special = debugValue,
+        attackModifier = 7,
+        lastEnemySpecies = "DIRECT_POKEMON_TEST",
+        debugPokemonTest = true,
+        resolvedEncounter = EncounterData.resolve(debugValue, pokemonByIndex),
+      }
+      Screens.push(game, "StartMenu")
+      forcedMenu = game.stack:top()
+      game.stack:pop()
+      return
+    end
+
     -- Direct test-battle action. Reuse the exact existing encounter resolver by
     -- creating the same finished-escape payload and silently opening/closing
     -- the forced Start menu state. Nothing is drawn; its screen.popped handler
     -- immediately queues the selected trainer/glitch encounter.
-    if debugTestBattlePending
+    if mod._g1gppDevelopmentTools and debugTestBattlePending
        and game and game.stack:top() == world
        and not world.transitioning
        and not world.runner:isRunning() then
       debugTestBattlePending = false
-      local _, debugValue, debugAttackModifier = debugSettings()
+      local debugAttackModifier = enemyMemory:getAttackModifier()
+      local debugValue = enemyMemory:getSpecial()
+      if not enemyMemory:isAttackModifierValid() then
+        debugLogger:log("DIRECT TEST BATTLE BLOCKED",
+          "phase=execution reason=memory_attack_mod_cleared attackMod="
+            .. debugLogger:safeField(debugAttackModifier))
+        return
+      end
       captureGlitchCityOrigin(world, "direct_test_before_battle")
       debugLogger:log("DIRECT TEST BATTLE START", "special=" .. debugLogger:safeField(debugValue)
         .. " attackMod=" .. debugLogger:safeField(debugAttackModifier) .. " " .. playerStateSummary(world))
@@ -5723,7 +6784,7 @@ return function(mod)
     -- A native Start-menu selection closes through the menu's own lifecycle.
     -- Once the overworld is safely topmost, present our own WARP / CANCEL box
     -- rather than entering the game's TELEPORT field-move confirmation.
-    if quickWarpConfirmPending
+    if mod._g1gppDevelopmentTools and quickWarpConfirmPending
        and game and game.stack:top() == world
        and not world.transitioning
        and not world.runner:isRunning() then
@@ -5734,7 +6795,7 @@ return function(mod)
 
     -- Perform a confirmed Quick Warp only after the confirmation screen has
     -- popped and control has safely returned to the overworld.
-    if quickWarpMenuPending
+    if mod._g1gppDevelopmentTools and quickWarpMenuPending
        and game and game.stack:top() == world
        and not world.transitioning
        and not world.runner:isRunning() then
@@ -5746,7 +6807,7 @@ return function(mod)
     -- A Warp Anywhere selection is made inside a child list above the Mods
     -- screen. Wait until every menu has closed and the idle overworld is
     -- topmost before changing maps.
-    if warpAnywherePending
+    if mod._g1gppDevelopmentTools and warpAnywherePending
        and game and game.stack:top() == world
        and not world.transitioning
        and not world.runner:isRunning() then
@@ -5757,7 +6818,8 @@ return function(mod)
     local input = game and game.input
     local latch = world.joyLatch
     local safeForQuickWarp =
-      quickWarpPoint
+      mod._g1gppDevelopmentTools
+      and quickWarpPoint
       and game
       and game.stack:top() == world
       and input
@@ -5890,271 +6952,8 @@ return function(mod)
   end
 
 
-  local crashRawFrames248 = {
-    {
-      vram = mod.assets:path("assets/effects_raw/248/000.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/000.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/000.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/001.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/001.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/001.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/002.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/002.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/002.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/003.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/003.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/003.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/004.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/004.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/004.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/005.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/005.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/005.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/006.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/006.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/006.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/007.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/007.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/007.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/008.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/008.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/008.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/009.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/009.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/009.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/010.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/010.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/010.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/011.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/011.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/011.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/012.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/012.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/012.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/013.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/013.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/013.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/014.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/014.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/014.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/015.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/015.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/015.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/016.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/016.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/016.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/017.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/017.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/017.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/018.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/018.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/018.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/019.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/019.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/019.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/020.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/020.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/020.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/021.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/021.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/021.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/022.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/022.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/022.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/023.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/023.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/023.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/024.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/024.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/024.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/025.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/025.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/025.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/026.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/026.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/026.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/027.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/027.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/027.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/028.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/028.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/028.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/029.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/029.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/029.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/248/030.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/248/030.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/248/030.regs.bin"),
-    },
-  }
-
-  local crashRawFrames254 = {
-    {
-      vram = mod.assets:path("assets/effects_raw/254/000.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/000.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/000.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/001.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/001.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/001.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/002.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/002.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/002.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/003.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/003.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/003.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/004.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/004.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/004.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/005.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/005.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/005.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/006.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/006.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/006.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/007.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/007.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/007.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/008.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/008.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/008.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/009.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/009.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/009.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/010.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/010.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/010.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/011.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/011.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/011.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/012.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/012.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/012.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/013.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/013.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/013.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/014.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/014.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/014.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/015.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/015.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/015.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/016.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/016.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/016.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/017.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/017.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/017.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/018.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/018.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/018.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/019.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/019.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/019.regs.bin"),
-    },
-    {
-      vram = mod.assets:path("assets/effects_raw/254/020.vram.bin"),
-      oam = mod.assets:path("assets/effects_raw/254/020.oam.bin"),
-      regs = mod.assets:path("assets/effects_raw/254/020.regs.bin"),
-    },
-  }
+  -- Captured VRAM/OAM/register dumps are research-only and are never shipped.
+  -- Current crash recreations use native battle state plus safe overlays.
 
   local trainerByClassIndex = {}
   local generatedTrainerParties = {}
@@ -6293,6 +7092,7 @@ return function(mod)
     return lastName, lastCategory
   end
   local pendingCrashEffect = nil
+  local pendingRetiredCrashEffect = nil
   local activeNativeCrashBattle = nil
   local pendingJacredVariant = nil
 
@@ -6359,8 +7159,7 @@ return function(mod)
       index = 0xFE,
       name = "",
       baseMoney = 0,
-      pic = mod.assets:path(
-        "assets/native_glitch/corrupted_enemy_trainer.png"),
+      pic = "save/mod-derived/g1gpp/battle/trainers/g1gpp_corrupted_enemy_trainer.png",
       parties = {
         {
           { level = 7, species = "PIDGEY" },
@@ -6386,7 +7185,7 @@ return function(mod)
       index = 0,
       name = "JACRED",
       baseMoney = 0,
-      pic = mod.assets:path("assets/effects/jacred.png"),
+      pic = "save/mod-derived/g1gpp/battle/trainers/g1gpp_corrupted_enemy_trainer.png",
       parties = {
         {
           { level = 255, species = "TF_GLITCH_031" },
@@ -6445,6 +7244,11 @@ return function(mod)
     if cached then return cached end
 
     local party, sourceClassIndex = rawTrainerParty(classIndex, trainerSet)
+    local curatedKind
+    if not party then
+      party, sourceClassIndex, curatedKind =
+        lateTrainer246247.curatedParty(classIndex, trainerSet, pokemonByIndex)
+    end
     if not party then return nil, "past_trainer_table" end
 
     -- Append to the real presented class instead of creating a fake class.
@@ -6467,6 +7271,7 @@ return function(mod)
       presentedClassIndex = classIndex,
       sourceClassIndex = sourceClassIndex,
       trainerSet = trainerSet,
+      curatedOob = curatedKind,
     }
     generatedTrainerParties[key] = cached
     return cached
@@ -6474,6 +7279,7 @@ return function(mod)
 
   local function classifyUpperTrainer(special, trainerSet)
     special = tonumber(special)
+    if not special then return nil end
     trainerSet =
       math.max(1, math.min(13, math.floor(tonumber(trainerSet) or 7)))
 
@@ -6532,8 +7338,30 @@ return function(mod)
     return nil
   end
 
+  local function resetVolatileSession(reason)
+    escape = nil
+    enemyMemory:reset(reason)
+    debugTestBattlePending = false
+    debugPokemonBattlePending = false
+    debugGlitchCityPending = false
+    pendingRetiredCrashEffect = nil
+    forceMenuPending = false
+    forcedMenu = nil
+  end
+
+  -- CONTINUE and NEW GAME can rebuild the active session without restarting
+  -- the LÖVE process. Gen I's volatile battle memory must still clear there.
+  mod.events:on("save.loaded", function(_ev)
+    resetVolatileSession("save_loaded")
+  end)
+
+  mod.events:on("save.created", function(_ev)
+    resetVolatileSession("save_created")
+  end)
+
   mod.events:on("game.ready", function(ev)
     game = ev.game
+    resetVolatileSession("game_ready")
     mod.log:info(
       "G1GPP timing mode: %s (%d frame window)",
       timingMode(), timingWindow())
@@ -6541,11 +7369,32 @@ return function(mod)
     rebuildTrainerClassIndex()
     installJacredTrainer()
     installCrashBridgeTrainer()
+    local lateRuntimeOk, lateRuntimeStatus = lateTrainer246247.installRuntime(game)
+    debugLogger:log("TRAINER 246/247 RUNTIME INSTALL",
+      "ok=" .. debugLogger:safeField(lateRuntimeOk)
+        .. " nidorino=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.nidorino)
+        .. " gen208=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.generated and lateRuntimeStatus.generated[208])
+        .. " gen200=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.generated and lateRuntimeStatus.generated[200])
+        .. " gen230=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.generated and lateRuntimeStatus.generated[230])
+        .. " nameCryEvidence=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.nameCryEvidence)
+        .. " cry208Header=" .. debugLogger:safeField(lateRuntimeStatus and lateRuntimeStatus.cry208Header))
+    local fullRosterOk, fullRosterStatus = TrainerFlyFullRoster.installRuntime(game)
+    debugLogger:log("FULL GLITCH ROSTER RUNTIME INSTALL",
+      "ok=" .. debugLogger:safeField(fullRosterOk)
+        .. " installed=" .. debugLogger:safeField(fullRosterStatus and fullRosterStatus.installed)
+        .. " zeroStats=" .. debugLogger:safeField(fullRosterStatus and fullRosterStatus.zeroStats))
     for id, def in pairs((game.data and game.data.pokemon) or {}) do
       local index = def and tonumber(def.index)
       if index then pokemonByIndex[index] = id end
     end
-    quickWarpPoint = loadQuickWarpFile()
+    for _, entry in pairs(EncounterData.glitchPokemon) do
+      local def = entry and game.data and game.data.pokemon
+        and game.data.pokemon[entry.id]
+      if def and def.baseStats and tonumber(entry.index) <= 184 then
+        def.baseStats.defense = 0
+      end
+    end
+    quickWarpPoint = mod._g1gppDevelopmentTools and loadQuickWarpFile() or nil
 
     mod.log:info("G1GPP indexed %d internal species values",
       (function() local n = 0; for _ in pairs(pokemonByIndex) do n = n + 1 end; return n end)())
@@ -6630,14 +7479,12 @@ return function(mod)
         -- of the validated corrupted back sprite. The two packaged images are
         -- pixel-perfect horizontal mirrors; this changes facing only.
         ctx.trueColor = false
-        return mod.assets:path(
-          "assets/native_glitch/corrupted_trainer_back.png")
+        return "save/mod-derived/g1gpp/battle/g1gpp_corrupted_trainer_back.png"
       end
 
       if bridge then
         ctx.trueColor = false
-        return mod.assets:path(
-          "assets/native_glitch/corrupted_trainer_back.png")
+        return "save/mod-derived/g1gpp/battle/g1gpp_corrupted_trainer_back.png"
       end
     end
     return resolved
@@ -6649,6 +7496,39 @@ return function(mod)
     releaseTrainerApproach(activeWorld)
     -- Fallback for builds that emit player.warped after beginTeleportOut.
     armDebugReturnIfEnabled("player_warped")
+  end)
+
+  -- Development-only trainer battle assist, modeled after the validated
+  -- mGBA capture fixture. It changes only transient/current battle HP while
+  -- enabled. Each newly active enemy starts at 1 HP after normal battle
+  -- initialization, preserving every other captured stat/type/move field.
+  mod.events:on("battle.started", function(ev)
+    if mod.options:get("debug_trainer_test_assist") ~= true then return end
+    if not (ev and ev.kind == "trainer" and ev.battle and ev.battle.enemy) then return end
+    local battler = ev.battle.enemy
+    local mon = battler.mon
+    if not mon then return end
+    local before = tonumber(mon.hp) or 0
+    mon.hp = 1
+    battler.shownHP = 1
+    debugLogger:log("TRAINER TEST ENEMY HP FORCED",
+      "phase=battle_started trainerId=" .. debugLogger:safeField(ev.trainerId)
+        .. " species=" .. debugLogger:safeField(mon.species)
+        .. " before=" .. debugLogger:safeField(before) .. " after=1")
+  end)
+
+  mod.events:on("battle.battler_switched", function(ev)
+    if mod.options:get("debug_trainer_test_assist") ~= true then return end
+    local battle = ev and ev.battle
+    local battler = ev and ev.battler
+    if not (battle and battle.trainer and battler and battler.isPlayer ~= true and battler.mon) then return end
+    local before = tonumber(battler.mon.hp) or 0
+    battler.mon.hp = 1
+    battler.shownHP = 1
+    debugLogger:log("TRAINER TEST ENEMY HP FORCED",
+      "phase=battler_switched trainerId=" .. debugLogger:safeField(battle.trainer.id)
+        .. " species=" .. debugLogger:safeField(battler.mon.species)
+        .. " before=" .. debugLogger:safeField(before) .. " after=1")
   end)
 
   mod.events:on("battle.started", function(ev)
@@ -6701,8 +7581,9 @@ return function(mod)
         -- mods see the same engine-owned sprite rather than an overlay.
         activeNativeCrashBattle = opts
         opts.battle = ev.battle
-        opts.hangTonePath = mod.assets:path(
-          "assets/audio/music_hang_note.wav")
+        -- No captured WAV is distributed. A future release-safe synthesis
+        -- pass may restore the sustained hang tone from player-owned data.
+        opts.hangTonePath = nil
         opts.battleFrames = 150
         opts.hangFrames = 75
         opts.fadeFrames = 90
@@ -6721,12 +7602,43 @@ return function(mod)
       return
     end
 
-    if not (escape and escape.teleported and not escape.qualified) then return end
-    intermediaryBattle = ev.kind == "trainer" and ev.battle or nil
-    capturedSpecial = nil
-    capturedAttackModifier = nil
-    capturedEnemySpecies = nil
-    if intermediaryBattle then captureCurrentEnemy(intermediaryBattle) end
+    if pendingRetiredCrashEffect
+       and ev.kind == "wild" and ev.battle then
+      local opts = pendingRetiredCrashEffect
+      pendingRetiredCrashEffect = nil
+      opts.battle = ev.battle
+
+      -- Freeze combat before the message/menu phase. Only the native entry
+      -- wipe and sprite slide are advanced by CrashRecoveryScreen.
+      ev.battle.queue = {}
+      ev.battle.afterQueue = "menu"
+      game.stack:push(CrashRecoveryScreen.new(game, opts))
+
+      debugLogger:log("RETIRED GLITCH FAILURE STARTED",
+        "special=" .. debugLogger:safeField(opts.special)
+          .. " displaySpecies=" .. debugLogger:safeField(opts.displaySpecies)
+          .. " playable=false captureAllowed=false saveMutation=false")
+      return
+    end
+
+    enemyMemory:beginBattle(ev,
+      escape and escape.teleported == true or false)
+
+    if not (escape and escape.teleported) then return end
+
+    -- A Trainer must still complete the interrupted approach before the
+    -- retained memory can be consumed. A wild battle updates memory, but does
+    -- not qualify an otherwise incomplete setup.
+    if not escape.qualified and ev.kind ~= "trainer" then
+      debugLogger:log("TRAINER-FLY PREQUALIFY BATTLE IGNORED",
+        "kind=" .. debugLogger:safeField(ev.kind)
+          .. " reason=intermediary_trainer_required memoryStillUpdated=true")
+      return
+    end
+
+    debugLogger:log("TRAINER-FLY SELECTION BATTLE TRACKING",
+      "phase=" .. (escape.qualified and "overwrite" or "intermediary")
+        .. " kind=" .. debugLogger:safeField(ev.kind))
   end)
 
   mod.events:on("battle.ended", function(ev)
@@ -6772,40 +7684,53 @@ return function(mod)
   end)
 
   mod.events:on("battle.turn_ended", function(ev)
-    if ev.battle == intermediaryBattle then captureCurrentEnemy(ev.battle) end
+    enemyMemory:captureTurn(ev)
   end)
 
   mod.events:on("battle.battler_switched", function(ev)
-    if ev.battle == intermediaryBattle then captureEnemy(ev.battler) end
+    enemyMemory:captureSwitched(ev)
   end)
 
   mod.events:on("battle.fainted", function(ev)
-    if ev.battle == intermediaryBattle then captureEnemy(ev.battler) end
+    enemyMemory:captureFainted(ev)
   end)
 
   mod.events:on("battle.ended", function(ev)
-    if not (escape and escape.teleported and not escape.qualified) then return end
-    if ev.battle ~= intermediaryBattle then return end
-    captureCurrentEnemy(ev.battle)
-    if ev.result == "win" and capturedSpecial ~= nil then
-      escape.qualified = true
-      escape.special = capturedSpecial
-      escape.attackModifier = capturedAttackModifier or 7
-      escape.lastEnemySpecies = capturedEnemySpecies
-      escape.resolvedEncounter =
-        EncounterData.resolve(capturedSpecial, pokemonByIndex)
-      mod.log:info(
-        "G1GPP qualified: last=%s Special=%d AttackMod=%d kind=%s species=%s; return to %s",
-        tostring(capturedEnemySpecies), capturedSpecial,
-        tonumber(escape.attackModifier) or 7,
-        tostring(escape.resolvedEncounter and escape.resolvedEncounter.kind),
-        tostring(escape.resolvedEncounter and escape.resolvedEncounter.species),
-        tostring(escape.originMap))
+    local memoryState = enemyMemory:finishBattle(ev)
+    if not memoryState then return end
+
+    if escape and escape.teleported then
+      local wasQualified = escape.qualified == true
+      if memoryState.special ~= nil
+         and (wasQualified or memoryState.qualifyingTrainer) then
+        escape.qualified = true
+        escape.special = memoryState.special
+        escape.attackModifier = memoryState.attackModifier or 7
+        escape.lastEnemySpecies = memoryState.species
+        escape.resolvedEncounter =
+          EncounterData.resolve(memoryState.special, pokemonByIndex)
+        mod.log:info(
+          "G1GPP %s: last=%s Special=%d AttackMod=%d kind=%s species=%s result=%s; return to %s",
+          wasQualified and "selection overwritten" or "qualified",
+          tostring(memoryState.species), memoryState.special,
+          tonumber(escape.attackModifier) or 7,
+          tostring(escape.resolvedEncounter and escape.resolvedEncounter.kind),
+          tostring(escape.resolvedEncounter and escape.resolvedEncounter.species),
+          tostring(ev.result),
+          tostring(escape.originMap))
+        debugLogger:log(wasQualified and "TRAINER-FLY SELECTION OVERWRITTEN"
+            or "TRAINER-FLY QUALIFIED",
+          "last=" .. debugLogger:safeField(memoryState.species)
+            .. " special=" .. debugLogger:safeField(memoryState.special)
+            .. " attackMod=" .. debugLogger:safeField(escape.attackModifier)
+            .. " result=" .. debugLogger:safeField(ev.result)
+            .. " runtimeOnly=true")
+      elseif not wasQualified then
+        debugLogger:log("TRAINER-FLY PREQUALIFY BATTLE IGNORED",
+          "result=" .. debugLogger:safeField(ev.result)
+            .. " reason=intermediary_trainer_required memoryStillUpdated=true")
+      end
     end
-    intermediaryBattle = nil
-    capturedSpecial = nil
-    capturedAttackModifier = nil
-    capturedEnemySpecies = nil
   end)
 
   mod.events:on("map.entered", function(ev)
@@ -6829,6 +7754,10 @@ return function(mod)
       mod.log:info(
         "G1GPP timing changed to %s (%d frame window)",
         timingMode(), timingWindow())
+    elseif ev and ev.mod == mod.id and ev.key == "debug_trainer_test_assist" then
+      debugLogger:log("TRAINER TEST ASSIST CHANGED",
+        "enabled=" .. debugLogger:safeField(mod.options:get("debug_trainer_test_assist") == true)
+          .. " enemyHpOnActivation=1 fixture=Lv100_TEST_MEW_999_STATS_PSYCHIC63")
     end
   end)
 
@@ -6855,12 +7784,17 @@ return function(mod)
       math.max(1, math.min(13,
         math.floor(tonumber(finishedEscape and finishedEscape.attackModifier)
           or 7)))
-    local upper = classifyUpperTrainer(special, attackModifier)
+    local upper = nil
+    if not (finishedEscape and finishedEscape.debugPokemonTest) then
+      upper = classifyUpperTrainer(special, attackModifier)
+    end
     local battleWorld = finishedEscape and finishedEscape.world or activeWorld
     captureGlitchCityOrigin(battleWorld, "screen_popped_before_start_battle")
     debugLogger:log("BATTLE RESOLUTION", "special=" .. debugLogger:safeField(special)
       .. " attackMod=" .. debugLogger:safeField(attackModifier)
       .. " upperKind=" .. debugLogger:safeField(upper and upper.kind)
+      .. " oldMan=" .. debugLogger:safeField(
+        finishedEscape and finishedEscape.oldManEncounter == true)
       .. " " .. playerStateSummary(battleWorld))
 
     if upper and upper.kind == "trainer" then
@@ -6878,6 +7812,13 @@ return function(mod)
         attackModifier,
         tonumber(upper.partyIndex) or -1,
         tonumber(upper.sourceClassIndex) or -1)
+      if upper.curatedOob then
+        debugLogger:log("TRAINER 246/247 CURATED OOB",
+          "special=" .. debugLogger:safeField(special)
+            .. " selector=" .. debugLogger:safeField(attackModifier)
+            .. " presentation=" .. debugLogger:safeField(upper.trainerClass)
+            .. " case=" .. debugLogger:safeField(upper.curatedOob))
+      end
       return
     end
 
@@ -6994,15 +7935,16 @@ return function(mod)
     end
 
     if encounter.kind == "pokemon" and encounter.species then
+      local encounterLevel = finishedEscape and finishedEscape.oldManLevel or 7
       startTrainerFlyBattleMusic("wild")
 
       mod.world:queueScript({
-        { "start_battle", "wild", encounter.species, 7 },
+        { "start_battle", "wild", encounter.species, encounterLevel },
       }, { source = mod.id, persistAcrossWarp = true })
 
       mod.log:info(
-        "G1GPP started level-7 %s from Special/index %s (%s)",
-        tostring(encounter.species), tostring(special),
+        "G1GPP started level-%s %s from Special/index %s (%s)",
+        tostring(encounterLevel), tostring(encounter.species), tostring(special),
         tostring(encounter.subtype))
       return
     end
@@ -7011,7 +7953,49 @@ return function(mod)
       local effect = encounter.effect or {}
       local script
 
-      if effect.class == "white_failure" then
+      if effect.class == "retired_species_crash" then
+        local choices = {}
+        for retainedIndex, retained in pairs(EncounterData.glitchPokemon) do
+          if type(retainedIndex) == "number" and retained and retained.id then
+            choices[#choices + 1] = retained.id
+          end
+        end
+        table.sort(choices)
+        local displaySpecies = choices[math.random(1, #choices)]
+        local returnStates = {}
+        for index, state in ipairs(game.stack.states or {}) do
+          returnStates[index] = state
+        end
+
+        pendingRetiredCrashEffect = {
+          special = special,
+          displaySpecies = displaySpecies,
+          returnWorld = battleWorld,
+          returnStates = returnStates,
+          retiredFailure = true,
+          synthesizeHangTone = true,
+          battleFrames = math.random(125, 205),
+          -- Keep the existing varied frozen-corruption interval, then cut
+          -- immediately to black while the same note continues for 2-8 sec.
+          corruptionFrames = math.random(90, 165),
+          hangFrequency = math.random(330, 660),
+          blackFrames = math.random(120, 480),
+          returnFadeFrames = 60,
+        }
+        startTrainerFlyBattleMusic("wild")
+        mod.world:queueScript({
+          { "start_battle", "wild", displaySpecies, 7 },
+        }, { source = mod.id, persistAcrossWarp = true })
+        mod.log:warn(
+          "G1GPP queued retired failure Special %s with display sprite %s",
+          tostring(special), tostring(displaySpecies))
+        debugLogger:log("RETIRED RETURN SNAPSHOT CAPTURED",
+          "special=" .. debugLogger:safeField(special)
+            .. " states=" .. debugLogger:safeField(#returnStates)
+            .. " worldMatchesTop=" .. debugLogger:safeField(
+              returnStates[#returnStates] == battleWorld))
+        return
+      elseif effect.class == "white_failure" then
         script = {
           { "fade", "out", 2 },
           { "wait", 45 },

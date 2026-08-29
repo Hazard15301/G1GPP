@@ -1,0 +1,33 @@
+{
+  "luajit": {
+    "source": "https://github.com/LuaJIT/LuaJIT.git",
+    "branch": "v2.1",
+    "commit": "1ee778a4e37122d8ca7d5733c590a47dafd6b15c",
+    "version": "LuaJIT 2.1.1787165859",
+    "path": "C:\\path\\to\\luajit.exe",
+    "sha256": "13AEA601A2FDD3CE8228CEB72EA9F61A1F04A2F68C8770ACA3F8A9F6A8D378AD",
+    "dll_sha256": "F554590BD78280664E99A68C585F52D4C0641587EBC25B781C129FA62886EBF8"
+  },
+  "modkit": {
+    "source": "https://github.com/bryanthaboi/gen1recomp.git",
+    "tag": "v0.2.36",
+    "commit": "fc56b9b05f01c559610c71f801355abfa4ae920f",
+    "path": "C:\\path\\to\\gen1recomp\\tools\\modkit.py",
+    "sha256": "DA398852E4B8292C64731CF1181B54B2A2DBEEC5A4BB486BEC8EA3371430E549"
+  },
+  "player_cache": {
+    "data": "C:\\path\\to\\pokemon-love2d\\red\\data\\generated",
+    "assets": "C:\\path\\to\\pokemon-love2d\\red\\assets\\generated",
+    "gold": "C:\\path\\to\\pokemon-love2d\\gold"
+  },
+  "expected_findings": {
+    "loader": {
+      "count": 39,
+      "sha256": "DA2F7241A8617076D6D81799423BA86E80BCB9C7C128C4898DB1F5935C9472B3"
+    },
+    "lint": {
+      "count": 1,
+      "sha256": "E4D30768BC4B7C4E51A3CFD1C6C41449E3A2B118052D7A2BFB7D95F2B9003FEE"
+    }
+  }
+}
