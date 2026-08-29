@@ -26,7 +26,7 @@ G1GPP (Gen 1 Glitch Preservation Project) is a mod that aims to safely and accur
 - At least one of Gold, Silver, or Crystal must be imported into Gen1Recomp.
   Enable G1GPP for that Gen II edition and launch it once. You only need to get as far as the title screen.
 
-# Features
+## Features
 
 - Complete reconstruction of a multitude of glitch Pokémon and trainers in the Gen1Recomp.
   I used the emulator mGBA to systematically encounter, log, and record mountains of data on each and every glitch Pokémon starting with index 191 up to 255. That data was used to build battle and encounter data so that each of these glitches are now encounterable   in Gen1Recomp. You'll see the familiar "MissingNo." and "M" sprites, all faithfully recreated in Gen1Recomp using actual game data, rather than just including a sprite.
