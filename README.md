@@ -39,3 +39,22 @@ G1GPP (Gen 1 Glitch Preservation Project) is a mod that aims to safely and accur
 - One of the Pokegods that I personally wasted hours trying to find. *Hint* There is a scientist at Cinnabar Island that hints at a Raichu evolution due to a mistranslation from Japan.
 - More to come, suggestions welcome.
   
+## Previews
+
+<p align="center">
+  <a href="assets/glitch-trainer-battle.png">
+    <img src="assets/glitch-trainer-battle.png" alt="Glitch Trainer battle" width="300">
+  </a>
+  <a href="assets/missingno-battle.png">
+    <img src="assets/missingno-battle.png" alt="MissingNo. battle" width="300">
+  </a>
+  <a href="assets/glitch-pokemon-stats.png">
+    <img src="assets/glitch-pokemon-stats.png" alt="Glitch Pokémon statistics" width="300">
+  </a>
+</p>
+
+<p align="center">
+  <a href="assets/glitch-city-gameplay.gif">
+    <img src="assets/glitch-city-gameplay.gif" alt="Glitch City gameplay" width="600">
+  </a>
+</p>
